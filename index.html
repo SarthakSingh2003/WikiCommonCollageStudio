@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commons Collage Studio — Professional Editing Suite</title>
+  <meta name="description" content="Professional browser-based image editing and collage composition studio for Wikimedia Commons with pastel UI, color grading, non-destructive adjustments, annotations, and attribution tools." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="pastel-theme">
+  <div id="app" class="app-layout">
+    <!-- Top Studio Header -->
+    <header class="studio-header">
+      <div class="brand-group">
+        <div class="brand-logo-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <circle cx="9" cy="9" r="2"/>
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Commons Collage Studio</span>
+          <span class="brand-badge">Pro Suite</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Center -->
+      <div class="header-center-tools">
+        <button id="btn-undo" class="tool-btn" title="Undo (Ctrl+Z)" disabled>
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button id="btn-redo" class="tool-btn" title="Redo (Ctrl+Y)" disabled>
+          <i data-lucide="redo-2"></i>
+        </button>
+        <div class="v-divider"></div>
+        <button id="btn-zoom-out" class="tool-btn" title="Zoom Out">
+          <i data-lucide="zoom-out"></i>
+        </button>
+        <span id="zoom-level-text" class="zoom-display">100%</span>
+        <button id="btn-zoom-in" class="tool-btn" title="Zoom In">
+          <i data-lucide="zoom-in"></i>
+        </button>
+        <button id="btn-zoom-fit" class="tool-btn btn-text-tool" title="Fit to Screen">Fit</button>
+        <div class="v-divider"></div>
+        <button id="btn-compare-split" class="tool-btn" title="Toggle Before / After Split Slider">
+          <i data-lucide="columns-2"></i>
+          <span>Before / After</span>
+        </button>
+        <button id="btn-hold-original" class="tool-btn" title="Hold mouse down to preview Original">
+          <i data-lucide="eye"></i>
+          <span>Hold Original</span>
+        </button>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="header-right-tools">
+        <button id="btn-add-photos" class="btn-pastel btn-pastel-secondary">
+          <i data-lucide="image-plus"></i>
+          <span>Add Photos</span>
+        </button>
+        <button id="btn-commons-search" class="btn-pastel btn-pastel-mint">
+          <i data-lucide="globe"></i>
+          <span>Commons Search</span>
+        </button>
+        <button id="btn-project-state" class="btn-pastel btn-pastel-lavender">
+          <i data-lucide="folder-archive"></i>
+          <span>Project</span>
+        </button>
+        <button id="btn-export-studio" class="btn-pastel btn-pastel-primary">
+          <i data-lucide="download"></i>
+          <span>Export Collage</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <div class="workspace-body">
+      <!-- Left Navigation Bar: Tool Tabs -->
+      <aside class="tool-navigation-bar">
+        <nav class="tool-nav-tabs">
+          <button class="nav-tab active" data-tab="collage" title="Collage & Layouts">
+            <i data-lucide="layout-grid"></i>
+            <span>Collage</span>
+          </button>
+          <button class="nav-tab" data-tab="light" title="Color & Light Adjustments">
+            <i data-lucide="sliders-horizontal"></i>
+            <span>Light</span>
+          </button>
+          <button class="nav-tab" data-tab="grading" title="Color Grading & Channels">
+            <i data-lucide="palette"></i>
+            <span>Grading</span>
+          </button>
+          <button class="nav-tab" data-tab="filters" title="Filters & Presets">
+            <i data-lucide="sparkles"></i>
+            <span>Filters</span>
+          </button>
+          <button class="nav-tab" data-tab="crop" title="Crop & Geometry">
+            <i data-lucide="crop"></i>
+            <span>Crop</span>
+          </button>
+          <button class="nav-tab" data-tab="detail" title="Sharpen, Blur & Detail">
+            <i data-lucide="focus"></i>
+            <span>Detail</span>
+          </button>
+          <button class="nav-tab" data-tab="background" title="Background & Cutout">
+            <i data-lucide="wand-2"></i>
+            <span>Cutout</span>
+          </button>
+          <button class="nav-tab" data-tab="annotations" title="Text, Shapes & Pins">
+            <i data-lucide="type"></i>
+            <span>Annotate</span>
+          </button>
+          <button class="nav-tab" data-tab="retouch" title="Retouch & Local Brushes">
+            <i data-lucide="brush"></i>
+            <span>Retouch</span>
+          </button>
+          <button class="nav-tab" data-tab="layers" title="Layers Manager">
+            <i data-lucide="layers"></i>
+            <span>Layers</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Center Viewport: Interactive Canvas Stage -->
+      <main class="canvas-viewport-container" id="canvas-viewport">
+        <!-- Canvas Status / Notice Bar -->
+        <div id="viewport-banner" class="viewport-banner hidden">
+          <div class="banner-content">
+            <i data-lucide="shield-alert" class="banner-icon"></i>
+            <span id="banner-message">Privacy notice: Faces or identifying details may remain recognizable outside the selected privacy area. Verify before publishing.</span>
+          </div>
+          <button id="banner-close" class="banner-close-btn">&times;</button>
+        </div>
+
+        <div class="viewport-scroll-area" id="viewport-scroll-area">
+          <div class="canvas-wrapper" id="canvas-wrapper">
+            <!-- Main Rendering Canvas -->
+            <canvas id="main-canvas" width="1200" height="900"></canvas>
+            <!-- Overlay Interactive Canvas (for crop guides, split view, handles, annotations, brushes) -->
+            <canvas id="overlay-canvas" width="1200" height="900"></canvas>
+            
+            <!-- Before/After Split Line Handle -->
+            <div id="split-slider-line" class="split-slider-line hidden">
+              <div class="split-slider-handle">
+                <i data-lucide="chevrons-left-right"></i>
+                <span class="split-tag left">Original</span>
+                <span class="split-tag right">Edited</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Viewport Controls -->
+        <div class="floating-viewport-controls" id="floating-viewport-controls">
+          <div class="viewport-badge" id="canvas-dimension-badge">1200 × 900 px</div>
+          <div class="viewport-badge" id="active-image-name-badge" title="No photo selected">No photo selected</div>
+          <div class="viewport-quick-actions" id="viewport-quick-actions">
+            <button id="btn-quick-copy-adj" class="quick-pill-btn" title="Copy Adjustment Settings">
+              <i data-lucide="copy"></i> Copy Edits
+            </button>
+            <button id="btn-quick-paste-adj" class="quick-pill-btn" title="Paste Adjustment Settings">
+              <i data-lucide="clipboard-paste"></i> Paste Edits
+            </button>
+            <button id="btn-quick-apply-all" class="quick-pill-btn" title="Apply Current Adjustments to All Photos in Collage">
+              <i data-lucide="copy-check"></i> Apply to All
+            </button>
+            <button id="btn-quick-reset" class="quick-pill-btn" title="Reset Current Photo Adjustments">
+              <i data-lucide="rotate-ccw"></i> Reset Photo
+            </button>
+          </div>
+          <button id="btn-toggle-floating-controls" class="btn-toggle-floating" title="Minimize / Expand controls bar">
+            <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>
+          </button>
+        </div>
+      </main>
+
+      <!-- Right Inspector Panel: Tab Contents -->
+      <aside class="inspector-sidebar">
+        <!-- 1. Collage & Layouts Tab -->
+        <div class="inspector-tab-content active" id="tab-collage">
+          <div class="panel-header">
+            <h3>Collage & Layout</h3>
+            <span class="panel-subtitle">Arrange photos & canvas styling</span>
+          </div>
+          <div class="panel-section">
+            <label class="section-label">Composition Layout</label>
+            <div class="layout-grid-selector" id="layout-grid-selector">
+              <button class="layout-card active" data-layout="single" title="Single Photo Focus">
+                <div class="layout-thumb layout-single"></div>
+                <span>Single</span>
+              </button>
+              <button class="layout-card" data-layout="split-h" title="2 Photos Horizontal (Side by Side)">
+                <div class="layout-thumb layout-split-h"></div>
+                <span>Side by Side</span>
+              </button>
+              <button class="layout-card" data-layout="split-v" title="2 Photos Vertical (Stacked)">
+                <div class="layout-thumb layout-split-v"></div>
+                <span>Stacked</span>
+              </button>
+              <button class="layout-card" data-layout="grid-2x2" title="4 Photos Grid (2x2)">
+                <div class="layout-thumb layout-grid-4"></div>
+                <span>2 × 2 Grid</span>
+              </button>
+              <button class="layout-card" data-layout="featured-3" title="1 Main Feature + 2 Side">
+                <div class="layout-thumb layout-feat-3"></div>
+                <span>Featured 3</span>
+              </button>
+              <button class="layout-card" data-layout="filmstrip-3" title="3 Photos Filmstrip">
+                <div class="layout-thumb layout-filmstrip"></div>
+                <span>Filmstrip</span>
+              </button>
+              <button class="layout-card" data-layout="grid-3x2" title="6 Photos Grid (3x2)">
+                <div class="layout-thumb layout-grid-6"></div>
+                <span>3 × 2 Grid</span>
+              </button>
+              <button class="layout-card" data-layout="freeform" title="Freeform Canvas Positioning">
+                <div class="layout-thumb layout-freeform"></div>
+                <span>Freeform</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Freeform Transform Controls (Displayed when Freeform layout is active) -->
+          <div class="panel-section hidden" id="section-freeform-controls">
+            <div class="section-badge-header">
+              <label class="section-label">Freeform Photo Transform</label>
+              <span class="badge-mini badge-mint">Freeform</span>
+            </div>
+            <div class="freeform-grid-2x2">
+              <div class="input-field-compact">
+                <label>X (px)</label>
+                <input type="number" id="input-ff-x" value="0" />
+              </div>
+              <div class="input-field-compact">
+                <label>Y (px)</label>
+                <input type="number" id="input-ff-y" value="0" />
+              </div>
+              <div class="input-field-compact">
+                <label>Width</label>
+                <input type="number" id="input-ff-w" value="400" min="40" />
+              </div>
+              <div class="input-field-compact">
+                <label>Height</label>
+                <input type="number" id="input-ff-h" value="300" min="40" />
+              </div>
+            </div>
+
+            <div class="btn-grid-2 mt-2">
+              <button id="btn-ff-aspect-lock" class="btn-pill-toggle active" title="Lock Proportional Aspect Ratio">
+                <i data-lucide="lock"></i>
+                <span>Proportional</span>
+              </button>
+              <button id="btn-ff-reset-aspect" class="btn-pastel btn-pastel-secondary btn-sm" title="Restore Natural Aspect Ratio">
+                <i data-lucide="ratio"></i>
+                <span>Natural Ratio</span>
+              </button>
+            </div>
+
+            <div class="btn-grid-2 mt-2">
+              <button id="btn-ff-center" class="btn-pastel btn-pastel-mint btn-sm" title="Center Photo on Canvas">
+                <i data-lucide="align-center"></i>
+                <span>Center</span>
+              </button>
+              <button id="btn-ff-fit" class="btn-pastel btn-pastel-lavender btn-sm" title="Fit Photo to Canvas Inner Area">
+                <i data-lucide="maximize"></i>
+                <span>Fit Canvas</span>
+              </button>
+            </div>
+
+            <div class="btn-grid-2 mt-2">
+              <button id="btn-ff-rotate-left" class="btn-pastel btn-pastel-secondary btn-sm" title="Rotate 90° Counter-Clockwise">
+                <i data-lucide="rotate-ccw"></i>
+                <span>-90°</span>
+              </button>
+              <button id="btn-ff-rotate-right" class="btn-pastel btn-pastel-secondary btn-sm" title="Rotate 90° Clockwise">
+                <i data-lucide="rotate-cw"></i>
+                <span>+90°</span>
+              </button>
+            </div>
+
+            <div class="btn-stack mt-2">
+              <button id="btn-ff-cascade-all" class="btn-pastel btn-pastel-blush btn-sm" title="Cascade and distribute all images so none are hidden">
+                <i data-lucide="layers"></i>
+                <span>Cascade & Arrange All Photos</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Canvas Dimensions & Aspect Ratio</label>
+            <div class="pill-group" id="canvas-aspect-pills">
+              <button class="pill-btn active" data-aspect="4:3">4:3 Standard</button>
+              <button class="pill-btn" data-aspect="16:9">16:9 Widescreen</button>
+              <button class="pill-btn" data-aspect="1:1">1:1 Square</button>
+              <button class="pill-btn" data-aspect="3:2">3:2 Classic</button>
+              <button class="pill-btn" data-aspect="9:16">9:16 Story</button>
+              <button class="pill-btn" data-aspect="custom">Custom</button>
+            </div>
+            <div class="input-row custom-dims-row hidden" id="custom-dims-row">
+              <div class="input-field">
+                <label>Width</label>
+                <input type="number" id="canvas-width-input" value="1200" min="400" max="4000" />
+              </div>
+              <div class="input-field">
+                <label>Height</label>
+                <input type="number" id="canvas-height-input" value="900" min="400" max="4000" />
+              </div>
+              <button id="btn-apply-dims" class="btn-pastel btn-pastel-mint btn-sm">Apply</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Spacing & Framing</label>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Gutter Spacing</span>
+                <span class="control-value" id="val-spacing">16 px</span>
+              </div>
+              <input type="range" id="slider-spacing" min="0" max="60" value="16" />
+            </div>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Outer Padding</span>
+                <span class="control-value" id="val-padding">20 px</span>
+              </div>
+              <input type="range" id="slider-padding" min="0" max="80" value="20" />
+            </div>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Corner Rounding</span>
+                <span class="control-value" id="val-radius">8 px</span>
+              </div>
+              <input type="range" id="slider-radius" min="0" max="40" value="8" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Canvas Background</label>
+            <div class="bg-color-picker-row">
+              <div class="color-swatches" id="canvas-bg-swatches">
+                <button class="color-swatch active" data-color="#F8F9FD" style="background:#F8F9FD;" title="Soft Pearl"></button>
+                <button class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF;" title="Clean White"></button>
+                <button class="color-swatch" data-color="#F2EBF9" style="background:#F2EBF9;" title="Pastel Lilac"></button>
+                <button class="color-swatch" data-color="#EAF4F4" style="background:#EAF4F4;" title="Pastel Mint"></button>
+                <button class="color-swatch" data-color="#FDE2E4" style="background:#FDE2E4;" title="Pastel Blush"></button>
+                <button class="color-swatch" data-color="#FFF1E6" style="background:#FFF1E6;" title="Warm Cream"></button>
+                <button class="color-swatch" data-color="#E2ECE9" style="background:#E2ECE9;" title="Sage Mist"></button>
+                <button class="color-swatch" data-color="#2D3142" style="background:#2D3142;" title="Archival Charcoal"></button>
+              </div>
+              <div class="custom-color-input-wrap">
+                <input type="color" id="canvas-bg-color-picker" value="#F8F9FD" title="Custom Color" />
+              </div>
+            </div>
+            <div class="checkbox-row mt-2">
+              <label class="switch-wrap">
+                <input type="checkbox" id="chk-transparent-bg" />
+                <span class="slider-toggle"></span>
+                <span>Transparent Background</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Batch Operations</label>
+            <div class="btn-stack">
+              <button id="btn-batch-apply-adjustments" class="btn-pastel btn-pastel-lavender">
+                <i data-lucide="layers"></i> Apply Edits to All Photos
+              </button>
+              <button id="btn-batch-reset-all" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="refresh-cw"></i> Reset All Photos to Original
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Color & Light Adjustments Tab -->
+        <div class="inspector-tab-content" id="tab-light">
+          <div class="panel-header">
+            <h3>Color & Light</h3>
+            <div class="header-actions">
+              <button id="btn-reset-light" class="reset-link-btn" title="Reset Light & Color">Reset All</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <span class="section-badge-label">Tone & Exposure</span>
+            
+            <div class="control-group">
+              <div class="control-header">
+                <span>Exposure</span>
+                <span class="control-value" id="val-exposure">0.0 EV</span>
+              </div>
+              <input type="range" id="slider-exposure" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Brightness</span>
+                <span class="control-value" id="val-brightness">0</span>
+              </div>
+              <input type="range" id="slider-brightness" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Contrast</span>
+                <span class="control-value" id="val-contrast">0</span>
+              </div>
+              <input type="range" id="slider-contrast" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Highlights</span>
+                <span class="control-value" id="val-highlights">0</span>
+              </div>
+              <input type="range" id="slider-highlights" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Shadows</span>
+                <span class="control-value" id="val-shadows">0</span>
+              </div>
+              <input type="range" id="slider-shadows" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Whites</span>
+                <span class="control-value" id="val-whites">0</span>
+              </div>
+              <input type="range" id="slider-whites" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Blacks</span>
+                <span class="control-value" id="val-blacks">0</span>
+              </div>
+              <input type="range" id="slider-blacks" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Gamma</span>
+                <span class="control-value" id="val-gamma">1.00</span>
+              </div>
+              <input type="range" id="slider-gamma" min="40" max="220" value="100" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Color & Saturation</span>
+            
+            <div class="control-group">
+              <div class="control-header">
+                <span>Temperature</span>
+                <span class="control-value" id="val-temperature">0</span>
+              </div>
+              <input type="range" id="slider-temperature" min="-100" max="100" value="0" class="temp-slider" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Tint</span>
+                <span class="control-value" id="val-tint">0</span>
+              </div>
+              <input type="range" id="slider-tint" min="-100" max="100" value="0" class="tint-slider" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Vibrance</span>
+                <span class="control-value" id="val-vibrance">0</span>
+              </div>
+              <input type="range" id="slider-vibrance" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Saturation</span>
+                <span class="control-value" id="val-saturation">0</span>
+              </div>
+              <input type="range" id="slider-saturation" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Hue Shift</span>
+                <span class="control-value" id="val-hue">0°</span>
+              </div>
+              <input type="range" id="slider-hue" min="-180" max="180" value="0" class="hue-slider" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Matte Fade</span>
+                <span class="control-value" id="val-fade">0</span>
+              </div>
+              <input type="range" id="slider-fade" min="0" max="100" value="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Color Grading & Channels Tab -->
+        <div class="inspector-tab-content" id="tab-grading">
+          <div class="panel-header">
+            <h3>Color Grading</h3>
+            <div class="header-actions">
+              <button id="btn-reset-grading" class="reset-link-btn">Reset</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">3-Way Tone Grading</span>
+            <!-- Shadows -->
+            <div class="grading-subgroup">
+              <label class="subgroup-title">Shadows Tint</label>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Shadow Hue</span>
+                  <span class="control-value" id="val-shadows-hue">210°</span>
+                </div>
+                <input type="range" id="slider-shadows-hue" min="0" max="360" value="210" class="hue-slider" />
+              </div>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Shadow Saturation</span>
+                  <span class="control-value" id="val-shadows-sat">0%</span>
+                </div>
+                <input type="range" id="slider-shadows-sat" min="0" max="100" value="0" />
+              </div>
+            </div>
+
+            <!-- Midtones -->
+            <div class="grading-subgroup">
+              <label class="subgroup-title">Midtones Tint</label>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Midtone Hue</span>
+                  <span class="control-value" id="val-midtones-hue">45°</span>
+                </div>
+                <input type="range" id="slider-midtones-hue" min="0" max="360" value="45" class="hue-slider" />
+              </div>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Midtone Saturation</span>
+                  <span class="control-value" id="val-midtones-sat">0%</span>
+                </div>
+                <input type="range" id="slider-midtones-sat" min="0" max="100" value="0" />
+              </div>
+            </div>
+
+            <!-- Highlights -->
+            <div class="grading-subgroup">
+              <label class="subgroup-title">Highlights Tint</label>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Highlight Hue</span>
+                  <span class="control-value" id="val-highlights-hue">35°</span>
+                </div>
+                <input type="range" id="slider-highlights-hue" min="0" max="360" value="35" class="hue-slider" />
+              </div>
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Highlight Saturation</span>
+                  <span class="control-value" id="val-highlights-sat">0%</span>
+                </div>
+                <input type="range" id="slider-highlights-sat" min="0" max="100" value="0" />
+              </div>
+            </div>
+
+            <!-- Balance -->
+            <div class="control-group">
+              <div class="control-header">
+                <span>Split Toning Balance</span>
+                <span class="control-value" id="val-grading-balance">0</span>
+              </div>
+              <input type="range" id="slider-grading-balance" min="-100" max="100" value="0" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Individual RGB Channels</span>
+            <div class="control-group">
+              <div class="control-header">
+                <span class="text-red">Red Channel</span>
+                <span class="control-value" id="val-channel-r">0</span>
+              </div>
+              <input type="range" id="slider-channel-r" min="-100" max="100" value="0" class="red-slider" />
+            </div>
+            <div class="control-group">
+              <div class="control-header">
+                <span class="text-green">Green Channel</span>
+                <span class="control-value" id="val-channel-g">0</span>
+              </div>
+              <input type="range" id="slider-channel-g" min="-100" max="100" value="0" class="green-slider" />
+            </div>
+            <div class="control-group">
+              <div class="control-header">
+                <span class="text-blue">Blue Channel</span>
+                <span class="control-value" id="val-channel-b">0</span>
+              </div>
+              <input type="range" id="slider-channel-b" min="-100" max="100" value="0" class="blue-slider" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Monochrome & Toning Treatments</span>
+            <div class="pill-group" id="toning-style-pills">
+              <button class="pill-btn active" data-tone="none">Full Color</button>
+              <button class="pill-btn" data-tone="bw">Black & White</button>
+              <button class="pill-btn" data-tone="sepia">Sepia</button>
+              <button class="pill-btn" data-tone="cyanotype">Cyanotype</button>
+              <button class="pill-btn" data-tone="platinum">Platinum</button>
+              <button class="pill-btn" data-tone="warm-bronze">Warm Bronze</button>
+            </div>
+            <div class="control-group mt-2">
+              <div class="control-header">
+                <span>Treatment Strength</span>
+                <span class="control-value" id="val-tone-strength">100%</span>
+              </div>
+              <input type="range" id="slider-tone-strength" min="0" max="100" value="100" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Filters & Presets Tab -->
+        <div class="inspector-tab-content" id="tab-filters">
+          <div class="panel-header">
+            <h3>Filters & Presets</h3>
+            <button id="btn-remove-filter" class="reset-link-btn">Reset to Normal</button>
+          </div>
+
+          <div class="panel-section">
+            <div class="control-group mb-3">
+              <div class="control-header">
+                <span>Filter Intensity</span>
+                <span class="control-value" id="val-filter-intensity">100%</span>
+              </div>
+              <input type="range" id="slider-filter-intensity" min="0" max="100" value="100" />
+            </div>
+
+            <div class="filter-card-grid" id="filter-cards-container">
+              <!-- Filter cards populated dynamically with live preview badges -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Crop & Geometry Tab -->
+        <div class="inspector-tab-content" id="tab-crop">
+          <div class="panel-header">
+            <h3>Crop & Geometry</h3>
+            <button id="btn-reset-crop" class="reset-link-btn">Reset Crop</button>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Crop Aspect Ratio</label>
+            <div class="pill-group" id="crop-aspect-pills">
+              <button class="pill-btn active" data-crop-aspect="free">Freeform</button>
+              <button class="pill-btn" data-crop-aspect="1:1">1:1 Square</button>
+              <button class="pill-btn" data-crop-aspect="4:3">4:3 Standard</button>
+              <button class="pill-btn" data-crop-aspect="3:2">3:2 Photo</button>
+              <button class="pill-btn" data-crop-aspect="16:9">16:9 Wide</button>
+              <button class="pill-btn" data-crop-aspect="9:16">9:16 Portrait</button>
+              <button class="pill-btn" data-crop-aspect="3:4">3:4 Portrait</button>
+            </div>
+            <div class="btn-stack mt-2">
+              <button id="btn-toggle-crop-mode" class="btn-pastel btn-pastel-mint">
+                <i data-lucide="crop"></i>
+                <span id="txt-crop-mode">Enable Interactive Crop Box</span>
+              </button>
+              <button id="btn-apply-crop" class="btn-pastel btn-pastel-primary hidden">
+                <i data-lucide="check"></i> Confirm & Apply Crop
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Crop Guides Overlay</label>
+            <div class="pill-group" id="crop-guides-pills">
+              <button class="pill-btn active" data-guide="thirds">Rule of Thirds</button>
+              <button class="pill-btn" data-guide="center">Center Cross</button>
+              <button class="pill-btn" data-guide="golden">Golden Ratio</button>
+              <button class="pill-btn" data-guide="none">Off</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <label class="section-label">Straighten & Rotation</label>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Straighten Angle</span>
+                <span class="control-value" id="val-straighten">0.0°</span>
+              </div>
+              <input type="range" id="slider-straighten" min="-45" max="45" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Arbitrary Rotation</span>
+                <span class="control-value" id="val-rotation">0°</span>
+              </div>
+              <input type="range" id="slider-rotation" min="-180" max="180" value="0" />
+            </div>
+
+            <div class="btn-grid-4 mt-2">
+              <button id="btn-rotate-ccw" class="btn-pastel btn-pastel-secondary" title="Rotate 90° CCW">
+                <i data-lucide="rotate-ccw"></i> -90°
+              </button>
+              <button id="btn-rotate-cw" class="btn-pastel btn-pastel-secondary" title="Rotate 90° CW">
+                <i data-lucide="rotate-cw"></i> +90°
+              </button>
+              <button id="btn-flip-h" class="btn-pastel btn-pastel-secondary" title="Flip Horizontal">
+                <i data-lucide="flip-horizontal"></i> Flip H
+              </button>
+              <button id="btn-flip-v" class="btn-pastel btn-pastel-secondary" title="Flip Vertical">
+                <i data-lucide="flip-vertical"></i> Flip V
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Detail, Blur & Sharpening Tab -->
+        <div class="inspector-tab-content" id="tab-detail">
+          <div class="panel-header">
+            <h3>Sharpen, Blur & Detail</h3>
+            <button id="btn-reset-detail" class="reset-link-btn">Reset</button>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Global Sharpness & Clarity</span>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Sharpening Amount</span>
+                <span class="control-value" id="val-sharpen">0</span>
+              </div>
+              <input type="range" id="slider-sharpen" min="0" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Clarity (Local Contrast)</span>
+                <span class="control-value" id="val-clarity">0</span>
+              </div>
+              <input type="range" id="slider-clarity" min="0" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Global Blur Radius</span>
+                <span class="control-value" id="val-blur">0 px</span>
+              </div>
+              <input type="range" id="slider-blur" min="0" max="40" value="0" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Atmosphere & Texture</span>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Vignette</span>
+                <span class="control-value" id="val-vignette">0</span>
+              </div>
+              <input type="range" id="slider-vignette" min="0" max="100" value="0" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Film Grain</span>
+                <span class="control-value" id="val-grain">0</span>
+              </div>
+              <input type="range" id="slider-grain" min="0" max="100" value="0" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Selective Privacy Blur & Pixelation</span>
+            <p class="section-hint">Add resizable privacy zones over faces, license plates, or sensitive metadata.</p>
+            
+            <div class="btn-grid-2">
+              <button id="btn-add-privacy-blur" class="btn-pastel btn-pastel-mint" title="Add Blur Privacy Zone">
+                <i data-lucide="eye-off"></i> + Blur
+              </button>
+              <button id="btn-add-privacy-pixel" class="btn-pastel btn-pastel-lavender" title="Add Pixelate Privacy Zone">
+                <i data-lucide="grid"></i> + Pixelate
+              </button>
+            </div>
+
+            <div class="privacy-zones-list" id="privacy-zones-list">
+              <!-- Privacy zone items listed here with delete buttons -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Background & Cutout Tab -->
+        <div class="inspector-tab-content" id="tab-background">
+          <div class="panel-header">
+            <h3>Background & Cutout</h3>
+            <button id="btn-reset-cutout" class="reset-link-btn">Reset Mask</button>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Color Key Background Extraction</span>
+            <p class="section-hint">Click on photo background to sample color and remove it locally.</p>
+            
+            <div class="btn-stack">
+              <button id="btn-sample-cutout-color" class="btn-pastel btn-pastel-mint">
+                <i data-lucide="pipette"></i> Sample Background Color
+              </button>
+            </div>
+
+            <div class="color-preview-row mt-2">
+              <span>Target Color:</span>
+              <div id="cutout-target-swatch" class="sampled-color-swatch" style="background:#FFFFFF;"></div>
+              <input type="color" id="cutout-color-input" value="#FFFFFF" />
+            </div>
+
+            <div class="control-group mt-2">
+              <div class="control-header">
+                <span>Color Tolerance</span>
+                <span class="control-value" id="val-cutout-tolerance">35</span>
+              </div>
+              <input type="range" id="slider-cutout-tolerance" min="1" max="150" value="35" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Edge Feathering</span>
+                <span class="control-value" id="val-cutout-feather">2 px</span>
+              </div>
+              <input type="range" id="slider-cutout-feather" min="0" max="20" value="2" />
+            </div>
+
+            <div class="checkbox-row mt-2">
+              <label class="switch-wrap">
+                <input type="checkbox" id="chk-cutout-enable" />
+                <span class="slider-toggle"></span>
+                <span>Enable Background Cutout</span>
+              </label>
+            </div>
+            <div class="checkbox-row mt-1">
+              <label class="switch-wrap">
+                <input type="checkbox" id="chk-cutout-invert" />
+                <span class="slider-toggle"></span>
+                <span>Invert Cutout Mask</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Subject Drop Shadow Effect</span>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Shadow Blur</span>
+                <span class="control-value" id="val-shadow-blur">15 px</span>
+              </div>
+              <input type="range" id="slider-shadow-blur" min="0" max="60" value="15" />
+            </div>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Shadow Opacity</span>
+                <span class="control-value" id="val-shadow-opacity">30%</span>
+              </div>
+              <input type="range" id="slider-shadow-opacity" min="0" max="100" value="30" />
+            </div>
+            <div class="checkbox-row mt-2">
+              <label class="switch-wrap">
+                <input type="checkbox" id="chk-shadow-enable" />
+                <span class="slider-toggle"></span>
+                <span>Enable Drop Shadow</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. Text, Shapes & Annotations Tab -->
+        <div class="inspector-tab-content" id="tab-annotations">
+          <div class="panel-header">
+            <h3>Text, Shapes & Pins</h3>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Add Elements</span>
+            <div class="annotation-tool-buttons">
+              <button id="btn-add-title" class="btn-pastel btn-pastel-lavender">
+                <i data-lucide="heading-1"></i> Title
+              </button>
+              <button id="btn-add-text" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="type"></i> Text Box
+              </button>
+              <button id="btn-add-caption" class="btn-pastel btn-pastel-mint">
+                <i data-lucide="file-text"></i> Caption
+              </button>
+              <button id="btn-add-pin" class="btn-pastel btn-pastel-blush">
+                <i data-lucide="map-pin"></i> Number Pin
+              </button>
+              <button id="btn-add-arrow" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="move-up-right"></i> Arrow
+              </button>
+              <button id="btn-add-rect" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="square"></i> Rectangle
+              </button>
+              <button id="btn-add-circle" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="circle"></i> Circle
+              </button>
+              <button id="btn-add-callout" class="btn-pastel btn-pastel-lavender">
+                <i data-lucide="message-square"></i> Callout
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Annotation Element Inspector -->
+          <div class="panel-section" id="active-annotation-controls">
+            <span class="section-badge-label">Selected Element Properties</span>
+            <div id="no-annotation-selected-msg" class="empty-state-text">
+              Click an element on the canvas to customize its style.
+            </div>
+
+            <div id="annotation-edit-fields" class="hidden">
+              <div class="input-field mb-2" id="annot-text-group">
+                <label>Text Content</label>
+                <input type="text" id="annot-text-input" value="Sample Title" />
+              </div>
+
+              <div class="control-row-2 mb-2" id="annot-font-group">
+                <div class="input-field flex-1">
+                  <label>Font Family</label>
+                  <select id="annot-font-family">
+                    <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta (Modern)</option>
+                    <option value="Georgia, serif">Georgia (Classic Serif)</option>
+                    <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                    <option value="Impact, sans-serif">Impact (Bold)</option>
+                  </select>
+                </div>
+                <div class="input-field w-80">
+                  <label>Size</label>
+                  <input type="number" id="annot-font-size" value="28" min="10" max="140" />
+                </div>
+              </div>
+
+              <div class="color-picker-row mb-2">
+                <div class="input-field flex-1">
+                  <label id="lbl-annot-color">Border / Line Color</label>
+                  <input type="color" id="annot-color-picker" value="#2D3142" />
+                </div>
+                <div class="input-field flex-1">
+                  <label id="lbl-annot-bg">Fill Color</label>
+                  <input type="color" id="annot-bg-color-picker" value="#FFFFFF" />
+                </div>
+                <div class="checkbox-row self-end">
+                  <label class="switch-wrap">
+                    <input type="checkbox" id="chk-annot-bg" checked />
+                    <span class="slider-toggle"></span>
+                    <span>Fill</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Annotation Box Dimensions & Stroke Width -->
+              <div class="control-row-2 mb-2" id="annot-dims-row">
+                <div class="input-field flex-1">
+                  <label>Width (px)</label>
+                  <input type="number" id="annot-width-input" value="140" min="20" max="2400" />
+                </div>
+                <div class="input-field flex-1">
+                  <label>Height (px)</label>
+                  <input type="number" id="annot-height-input" value="90" min="20" max="2400" />
+                </div>
+              </div>
+
+              <div class="control-group mb-2" id="annot-stroke-group">
+                <div class="control-header">
+                  <span>Border / Line Thickness</span>
+                  <span class="control-value" id="val-annot-stroke">3 px</span>
+                </div>
+                <input type="range" id="slider-annot-stroke" min="0" max="24" value="3" />
+              </div>
+
+              <div class="control-group">
+                <div class="control-header">
+                  <span>Opacity</span>
+                  <span class="control-value" id="val-annot-opacity">100%</span>
+                </div>
+                <input type="range" id="slider-annot-opacity" min="10" max="100" value="100" />
+              </div>
+
+              <div class="btn-row mt-3">
+                <button id="btn-annot-duplicate" class="btn-pastel btn-pastel-secondary flex-1">
+                  <i data-lucide="copy"></i> Duplicate
+                </button>
+                <button id="btn-annot-delete" class="btn-pastel btn-pastel-blush flex-1">
+                  <i data-lucide="trash-2"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. Retouch & Local Brushes Tab -->
+        <div class="inspector-tab-content" id="tab-retouch">
+          <div class="panel-header">
+            <h3>Retouch & Local Tools</h3>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Active Brush Tool</span>
+            <div class="pill-group" id="brush-tool-pills">
+              <button class="pill-btn active" data-brush="none">None (Pointer)</button>
+              <button class="pill-btn" data-brush="spot-heal">Spot Heal</button>
+              <button class="pill-btn" data-brush="dodge">Dodge (Lighten)</button>
+              <button class="pill-btn" data-brush="burn">Burn (Darken)</button>
+              <button class="pill-btn" data-brush="blur">Brush Blur</button>
+              <button class="pill-btn" data-brush="sponge">Sponge (Saturate)</button>
+            </div>
+            <p class="section-hint mt-2" id="brush-instruction-text">Select a brush mode and paint directly over the canvas photo.</p>
+          </div>
+
+          <div class="panel-section">
+            <span class="section-badge-label">Brush Settings</span>
+            <div class="control-group">
+              <div class="control-header">
+                <span>Brush Size</span>
+                <span class="control-value" id="val-brush-size">24 px</span>
+              </div>
+              <input type="range" id="slider-brush-size" min="6" max="120" value="24" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-header">
+                <span>Brush Strength / Opacity</span>
+                <span class="control-value" id="val-brush-strength">50%</span>
+              </div>
+              <input type="range" id="slider-brush-strength" min="10" max="100" value="50" />
+            </div>
+
+            <div class="btn-stack mt-2">
+              <button id="btn-clear-brush-strokes" class="btn-pastel btn-pastel-secondary">
+                <i data-lucide="eraser"></i> Clear Retouching Strokes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. Layers Manager Tab -->
+        <div class="inspector-tab-content" id="tab-layers">
+          <div class="panel-header">
+            <h3>Layers Manager</h3>
+            <span class="panel-subtitle">Reorder, hide, lock & inspect</span>
+          </div>
+
+          <div class="panel-section">
+            <div class="layer-actions-toolbar mb-2">
+              <button id="btn-layer-move-up" class="layer-icon-btn" title="Bring Forward">
+                <i data-lucide="arrow-up"></i>
+              </button>
+              <button id="btn-layer-move-down" class="layer-icon-btn" title="Send Backward">
+                <i data-lucide="arrow-down"></i>
+              </button>
+              <button id="btn-layer-duplicate" class="layer-icon-btn" title="Duplicate Layer">
+                <i data-lucide="copy"></i>
+              </button>
+              <button id="btn-layer-delete" class="layer-icon-btn text-red" title="Delete Layer">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+
+            <div class="layers-list-container" id="layers-list">
+              <!-- Dynamically populated list of photo & annotation layers -->
+            </div>
+
+            <div class="control-group mt-3">
+              <div class="control-header">
+                <span>Selected Layer Opacity</span>
+                <span class="control-value" id="val-layer-opacity">100%</span>
+              </div>
+              <input type="range" id="slider-layer-opacity" min="0" max="100" value="100" />
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom Multi-Image Filmstrip & Gallery -->
+    <footer class="studio-bottom-strip">
+      <div class="strip-left-label">
+        <i data-lucide="images"></i>
+        <span>Collage Photos (<span id="photo-count-badge">0</span>)</span>
+      </div>
+
+      <div class="filmstrip-scroll" id="filmstrip-items">
+        <!-- Filmstrip thumbnails injected dynamically -->
+      </div>
+
+      <div class="strip-right-actions">
+        <input type="file" id="local-file-input" multiple accept="image/*" class="hidden" />
+        <button id="btn-upload-file" class="btn-pastel btn-pastel-secondary btn-sm" title="Upload photos from your computer">
+          <i data-lucide="upload"></i> Upload Local
+        </button>
+        <button id="btn-clear-all-photos" class="btn-pastel btn-pastel-blush btn-sm" title="Remove all photos from collage canvas">
+          <i data-lucide="trash-2"></i> Clear Canvas
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- 1. Wikimedia Commons Live Search & Sample Photos Modal -->
+  <div id="modal-commons-search" class="modal-overlay hidden">
+    <div class="modal-card modal-card-large">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-lucide="globe" class="modal-icon"></i>
+          <div>
+            <h3>Wikimedia Commons Library</h3>
+            <p>Search and add freely licensed archival, scientific, and fine art photos directly into your collage</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal="commons-search">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="search-input-wrap">
+          <input type="text" id="commons-query-input" placeholder="Search millions of Wikimedia Commons photos (e.g., Hubble, Claude Monet, Cherry blossom, Alps, Tokyo, Cat)..." />
+          <button id="btn-run-commons-search" class="btn-pastel btn-pastel-primary">
+            <i data-lucide="search"></i>
+            <span>Search</span>
+          </button>
+        </div>
+
+        <div class="modal-curated-section">
+          <span class="section-label">Popular Searches & Inspirations</span>
+          <div class="curated-pills">
+            <button class="curated-pill" data-query="Space Nebula Hubble James Webb">Astronomy & Cosmos</button>
+            <button class="curated-pill" data-query="Botanical illustration flower vintage">Botanical Vintage</button>
+            <button class="curated-pill" data-query="Cathedrals Gothic architecture">Architecture</button>
+            <button class="curated-pill" data-query="Claude Monet painting impressionism">Fine Art Masters</button>
+            <button class="curated-pill" data-query="Wildlife photography bird nature">Wildlife & Nature</button>
+            <button class="curated-pill" data-query="Japanese woodblock print Hokusai">Japanese Woodblock</button>
+            <button class="curated-pill" data-query="Vintage travel poster landscape">Vintage Travel</button>
+          </div>
+        </div>
+
+        <div class="commons-status-bar" id="commons-status-bar">
+          <span id="commons-status-text">Click any photo to add it into your collage</span>
+          <span id="commons-count-badge" class="badge-mini badge-mint">Curated</span>
+        </div>
+
+        <div class="commons-results-grid" id="commons-results-grid">
+          <!-- Image search results dynamically injected -->
+        </div>
+
+        <div class="commons-load-more-wrap mt-3 hidden" id="commons-load-more-wrap" style="text-align: center;">
+          <button id="btn-commons-load-more" class="btn-pastel btn-pastel-secondary btn-sm">
+            <i data-lucide="chevrons-down"></i>
+            <span>Load More Wikimedia Photos</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; background: #FAF9FE;">
+        <span class="text-sm font-semibold text-muted" id="commons-modal-footer-stats">Collage has 3 photos</span>
+        <button class="btn-pastel btn-pastel-mint" data-close-modal="commons-search">
+          <i data-lucide="check"></i>
+          <span>Done & Return to Studio</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Professional Export Modal -->
+  <div id="modal-export" class="modal-overlay hidden">
+    <div class="modal-card modal-card-large">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-lucide="download" class="modal-icon"></i>
+          <div>
+            <h3>Export Composition</h3>
+            <p>Generate high-resolution image and Wikimedia Commons attribution manifest</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal="export">&times;</button>
+      </div>
+
+      <div class="modal-body export-modal-body">
+        <div class="export-preview-column">
+          <div class="export-preview-frame">
+            <img id="export-preview-img" alt="Composition Preview" />
+          </div>
+          <div class="export-size-feedback" id="export-file-feedback">
+            <span>Estimated Size: ~1.4 MB</span>
+            <span>Dimensions: 1200 × 900 px</span>
+          </div>
+        </div>
+
+        <div class="export-settings-column">
+          <div class="settings-group">
+            <label class="section-label">Format</label>
+            <div class="pill-group" id="export-format-pills">
+              <button class="pill-btn active" data-format="image/png">PNG (Lossless)</button>
+              <button class="pill-btn" data-format="image/jpeg">JPEG</button>
+              <button class="pill-btn" data-format="image/webp">WebP</button>
+            </div>
+          </div>
+
+          <div class="settings-group" id="export-quality-group">
+            <div class="control-header">
+              <span>Quality</span>
+              <span class="control-value" id="val-export-quality">92%</span>
+            </div>
+            <input type="range" id="slider-export-quality" min="20" max="100" value="92" />
+          </div>
+
+          <div class="settings-group">
+            <label class="section-label">Resolution Scale</label>
+            <div class="pill-group" id="export-scale-pills">
+              <button class="pill-btn active" data-scale="1">1x Standard</button>
+              <button class="pill-btn" data-scale="2">2x High-DPI (2400px)</button>
+              <button class="pill-btn" data-scale="3">3x 4K Ultra (3600px)</button>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <label class="section-label">Wikimedia Commons Attribution</label>
+            <div class="attribution-box">
+              <textarea id="export-attribution-text" readonly rows="5" class="attribution-textarea"></textarea>
+              <div class="btn-row mt-1">
+                <button id="btn-copy-wikitext" class="btn-pastel btn-pastel-mint btn-sm flex-1">
+                  <i data-lucide="clipboard-copy"></i> Copy WikiText Markup
+                </button>
+                <button id="btn-copy-markdown" class="btn-pastel btn-pastel-secondary btn-sm flex-1">
+                  <i data-lucide="file-code"></i> Copy Markdown
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button id="btn-download-image" class="btn-pastel btn-pastel-primary btn-lg flex-1">
+              <i data-lucide="download"></i> Download Exported Image
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Project State Modal (Save/Load JSON) -->
+  <div id="modal-project" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i data-lucide="folder-archive" class="modal-icon"></i>
+          <div>
+            <h3>Project Workspace</h3>
+            <p>Save and restore editable studio project files (.wikicollage.json)</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal="project">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="btn-stack">
+          <button id="btn-save-project-file" class="btn-pastel btn-pastel-lavender">
+            <i data-lucide="save"></i> Save Project File (.wikicollage.json)
+          </button>
+          <label class="btn-pastel btn-pastel-secondary file-picker-label">
+            <i data-lucide="folder-open"></i> Load Existing Project File
+            <input type="file" id="project-file-input" accept=".json,.wikicollage.json" class="hidden" />
+          </label>
+        </div>
+        <p class="section-hint mt-3">Projects save your non-destructive photo adjustments, color grading, crop regions, annotations, and layouts without re-compressing photos.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
