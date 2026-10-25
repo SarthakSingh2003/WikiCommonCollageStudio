@@ -1,19 +1,20 @@
-// Commons Collage Studio — State & History Manager (Undo / Redo)
+import { AnnotationItem } from './annotationEngine.js';
 
 export class HistoryManager {
-  constructor(engine, onStateChange) {
+  constructor(engine, onStateChange, onApply) {
     this.engine = engine;
     this.onStateChange = onStateChange;
+    this.onApply = onApply;
     this.undoStack = [];
     this.redoStack = [];
     this.maxHistory = 40;
     this.isApplying = false;
   }
 
-  // Capture a snapshot of current studio parameters
   captureSnapshot() {
     return {
       activePhotoIndex: this.engine.activePhotoIndex,
+      activeAnnotationIndex: this.engine.activeAnnotationIndex,
       layout: this.engine.layout,
       spacing: this.engine.spacing,
       padding: this.engine.padding,
@@ -24,7 +25,8 @@ export class HistoryManager {
         adjustments: JSON.parse(JSON.stringify(p.adjustments)),
         opacity: p.opacity,
         visible: p.visible,
-        retouchStrokes: JSON.parse(JSON.stringify(p.retouchStrokes))
+        freeformBounds: p.freeformBounds ? { ...p.freeformBounds } : null,
+        retouchStrokes: JSON.parse(JSON.stringify(p.retouchStrokes || []))
       })),
       annotations: this.engine.annotations.map(a => ({
         id: a.id,
@@ -35,14 +37,19 @@ export class HistoryManager {
         height: a.height,
         rotation: a.rotation,
         opacity: a.opacity,
+        locked: a.locked,
+        visible: a.visible,
         text: a.text,
         fontSize: a.fontSize,
         fontFamily: a.fontFamily,
+        fontWeight: a.fontWeight,
+        textAlign: a.textAlign,
         color: a.color,
         fillColor: a.fillColor,
         strokeColor: a.strokeColor,
         strokeWidth: a.strokeWidth,
         hasBg: a.hasBg,
+        cornerRadius: a.cornerRadius,
         pinNumber: a.pinNumber,
         endX: a.endX,
         endY: a.endY
@@ -57,7 +64,7 @@ export class HistoryManager {
     if (this.undoStack.length > this.maxHistory) {
       this.undoStack.shift();
     }
-    this.redoStack = []; // Clear redo on new action
+    this.redoStack = [];
     this.notify();
   }
 
@@ -73,7 +80,6 @@ export class HistoryManager {
     if (!this.canUndo()) return;
     this.isApplying = true;
 
-    // Save current to redo
     const current = this.captureSnapshot();
     this.redoStack.push(current);
 
@@ -82,13 +88,13 @@ export class HistoryManager {
 
     this.isApplying = false;
     this.notify();
+    if (this.onApply) this.onApply(prev);
   }
 
   redo() {
     if (!this.canRedo()) return;
     this.isApplying = true;
 
-    // Save current to undo
     const current = this.captureSnapshot();
     this.undoStack.push(current);
 
@@ -97,6 +103,7 @@ export class HistoryManager {
 
     this.isApplying = false;
     this.notify();
+    if (this.onApply) this.onApply(next);
   }
 
   applySnapshot(snapshot) {
@@ -109,17 +116,24 @@ export class HistoryManager {
     this.engine.bgColor = snapshot.bgColor;
     this.engine.transparentBg = snapshot.transparentBg;
 
-    // Restore photo adjustments
     snapshot.photos.forEach((sp, idx) => {
       if (this.engine.photos[idx]) {
         const photo = this.engine.photos[idx];
         photo.adjustments = JSON.parse(JSON.stringify(sp.adjustments));
         photo.opacity = sp.opacity;
         photo.visible = sp.visible;
+        photo.freeformBounds = sp.freeformBounds ? { ...sp.freeformBounds } : null;
         photo.retouchStrokes = JSON.parse(JSON.stringify(sp.retouchStrokes || []));
         photo.needsProcessing = true;
       }
     });
+
+    if (snapshot.annotations) {
+      this.engine.annotations = snapshot.annotations.map(a => new AnnotationItem(a));
+      this.engine.activeAnnotationIndex = snapshot.activeAnnotationIndex !== undefined
+        ? Math.min(snapshot.activeAnnotationIndex, this.engine.annotations.length - 1)
+        : -1;
+    }
 
     this.engine.activePhotoIndex = Math.min(snapshot.activePhotoIndex, this.engine.photos.length - 1);
     this.engine.render();

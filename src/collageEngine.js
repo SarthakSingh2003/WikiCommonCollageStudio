@@ -1,4 +1,3 @@
-// Commons Collage Studio — Layout & Composition Engine
 import { applyImageAdjustments, applyFastBlur, applyPrivacyZones, applyRetouchStrokes, DEFAULT_ADJUSTMENTS } from './imageProcessing.js';
 
 export class CollagePhoto {
@@ -18,25 +17,19 @@ export class CollagePhoto {
     this.visible = true;
     this.locked = false;
 
-    // Freeform placement override (if in freeform layout)
     this.freeformBounds = null;
+    this.retouchStrokes = [];
 
-    // Retouch strokes applied to this photo
-    this.retouchStrokes = []; // array of { mode, points, size, strength }
-
-    // Cached processed canvas for real-time performance
     this.processedCanvas = document.createElement('canvas');
     this.needsProcessing = true;
   }
 
-  // Render the photo's adjustments onto its local processed canvas
   updateProcessedCanvas() {
     if (!this.img || !this.img.naturalWidth) return;
 
     const naturalW = this.img.naturalWidth;
     const naturalH = this.img.naturalHeight;
 
-    // Crop bounds (normalized 0..1 or full)
     const crop = this.adjustments.crop || { x: 0, y: 0, width: 1, height: 1 };
     const sx = Math.max(0, Math.min(naturalW, crop.x * naturalW));
     const sy = Math.max(0, Math.min(naturalH, crop.y * naturalH));
@@ -47,25 +40,20 @@ export class CollagePhoto {
     this.processedCanvas.height = sh;
     const ctx = this.processedCanvas.getContext('2d', { willReadFrequently: true });
 
-    // Draw base cropped image
     ctx.drawImage(this.img, sx, sy, sw, sh, 0, 0, sw, sh);
 
-    // Apply color, light, grading, grain, vignette
     const imgData = ctx.getImageData(0, 0, sw, sh);
     applyImageAdjustments(imgData, this.adjustments);
     ctx.putImageData(imgData, 0, 0);
 
-    // Apply global blur if set
     if (this.adjustments.blur > 0) {
       applyFastBlur(ctx, sw, sh, this.adjustments.blur);
     }
 
-    // Apply local retouch strokes
     if (this.retouchStrokes.length > 0) {
       applyRetouchStrokes(ctx, sw, sh, this.retouchStrokes);
     }
 
-    // Apply privacy zones (faces, plates, sensitive details)
     if (this.adjustments.privacyZones && this.adjustments.privacyZones.length > 0) {
       applyPrivacyZones(ctx, this.adjustments.privacyZones);
     }
@@ -91,32 +79,27 @@ export class CollageEngine {
     this.annotations = [];
     this.activeAnnotationIndex = -1;
 
-    // Layout configuration
-    this.layout = 'single'; // 'single' | 'split-h' | 'split-v' | 'grid-2x2' | 'featured-3' | 'filmstrip-3' | 'grid-3x2' | 'freeform'
+    this.layout = 'single';
     this.spacing = 16;
     this.padding = 20;
     this.cornerRadius = 8;
     this.bgColor = '#F8F9FD';
     this.transparentBg = false;
 
-    // Comparison modes
     this.showSplitComparison = false;
-    this.splitRatio = 0.5; // 0.0 to 1.0
+    this.splitRatio = 0.5;
     this.holdOriginalMode = false;
 
-    // Interactive Crop Mode
     this.isCropModeActive = false;
-    this.cropGuide = 'thirds'; // 'thirds' | 'center' | 'golden' | 'none'
-    this.activeCropRect = null; // { x, y, width, height } in canvas coords
+    this.cropGuide = 'thirds';
+    this.activeCropRect = null;
 
-    // Interactive Retouch Brush Mode
-    this.activeBrushMode = 'none'; // 'none' | 'spot-heal' | 'dodge' | 'burn' | 'blur' | 'sponge'
+    this.activeBrushMode = 'none';
     this.brushSize = 24;
     this.brushStrength = 50;
     this.currentBrushStroke = null;
     this.brushCursorPos = null;
 
-    // Interactive Privacy Zones
     this.activePrivacyZoneIndex = -1;
   }
 
@@ -158,7 +141,6 @@ export class CollageEngine {
     return null;
   }
 
-  // Automatically adjust layout slots if photos added
   updateLayoutAuto() {
     const count = this.photos.length;
     if (this.layout === 'single' && count > 1) {
@@ -168,7 +150,6 @@ export class CollageEngine {
     }
   }
 
-  // Calculate layout slots for photos based on active layout
   calculateSlots() {
     const w = this.width;
     const h = this.height;
@@ -213,7 +194,7 @@ export class CollageEngine {
         const rightH = (innerH - s) / 2;
         slots.push({ x: p, y: p, width: leftW, height: innerH });
         slots.push({ x: p + leftW + s, y: p, width: rightW, height: rightH });
-        slots.push({ x: p + leftW + s, y: p + rightH + s, width: rightW, height: rightH });
+        slots.push({ x: p + leftW + s, y: p, width: rightW, height: rightH });
         break;
       }
 
@@ -238,7 +219,6 @@ export class CollageEngine {
 
       case 'freeform':
       default:
-        // Use freeform bounds or distribute with natural aspect ratios
         for (let i = 0; i < this.photos.length; i++) {
           const photo = this.photos[i];
           if (photo.freeformBounds) {
@@ -262,7 +242,6 @@ export class CollageEngine {
     return slots;
   }
 
-  // Freeform Arrangement Helpers
   cascadeFreeformPhotos() {
     const p = this.padding;
     const innerW = this.width - p * 2;
@@ -333,7 +312,6 @@ export class CollageEngine {
     this.render();
   }
 
-  // Main Render Loop
   render() {
     const ctx = this.ctx;
     const w = this.width;
@@ -341,7 +319,6 @@ export class CollageEngine {
 
     ctx.clearRect(0, 0, w, h);
 
-    // 1. Canvas Background
     if (this.transparentBg) {
       this.renderCheckerboard(ctx, w, h);
     } else {
@@ -349,7 +326,6 @@ export class CollageEngine {
       ctx.fillRect(0, 0, w, h);
     }
 
-    // 2. Render Photos into Layout Slots
     if (this.photos.length === 0) {
       ctx.save();
       const p = this.padding;
@@ -382,7 +358,7 @@ export class CollageEngine {
       const slot = slots[i] || slots[slots.length - 1];
       if (!slot) continue;
 
-      photo.slotBounds = slot; // Save slot bounds for hit testing
+      photo.slotBounds = slot;
 
       if (photo.needsProcessing) {
         photo.updateProcessedCanvas();
@@ -391,7 +367,6 @@ export class CollageEngine {
       ctx.save();
       ctx.globalAlpha = photo.opacity;
 
-      // Handle Straightening / Rotation & Flips
       const centerX = slot.x + slot.width / 2;
       const centerY = slot.y + slot.height / 2;
       ctx.translate(centerX, centerY);
@@ -408,14 +383,12 @@ export class CollageEngine {
 
       ctx.translate(-slot.width / 2, -slot.height / 2);
 
-      // Rounded clipping path
       if (this.cornerRadius > 0) {
         ctx.beginPath();
         roundRect(ctx, 0, 0, slot.width, slot.height, this.cornerRadius);
         ctx.clip();
       }
 
-      // Drop shadow around subject / image if enabled
       if (photo.adjustments.shadowEnabled) {
         ctx.shadowColor = `rgba(0, 0, 0, ${(photo.adjustments.shadowOpacity || 30) / 100})`;
         ctx.shadowBlur = photo.adjustments.shadowBlur || 15;
@@ -423,29 +396,23 @@ export class CollageEngine {
         ctx.shadowOffsetY = 6;
       }
 
-      // Draw photo image
       if (this.holdOriginalMode && photo === activePhoto) {
-        // Draw raw unedited image
         ctx.drawImage(photo.img, 0, 0, slot.width, slot.height);
       } else {
-        // Draw processed canvas
         ctx.drawImage(photo.processedCanvas, 0, 0, slot.width, slot.height);
       }
 
       ctx.restore();
     }
 
-    // 3. Render Annotations & Pins
     for (const annot of this.annotations) {
       annot.render(ctx);
     }
 
-    // 4. Render Split Comparison Divider (if enabled)
     if (this.showSplitComparison && activePhoto && activePhoto.slotBounds) {
       this.renderSplitComparison(ctx, activePhoto);
     }
 
-    // 5. Render Interactive Overlays (crop box, selection borders)
     this.renderOverlays();
   }
 
@@ -459,14 +426,12 @@ export class CollageEngine {
     }
   }
 
-  // Split Before / After slider view
   renderSplitComparison(ctx, photo) {
     const slot = photo.slotBounds;
     if (!slot) return;
 
     const splitX = slot.x + slot.width * this.splitRatio;
 
-    // Draw left half with original unprocessed image
     ctx.save();
     ctx.beginPath();
     ctx.rect(slot.x, slot.y, splitX - slot.x, slot.height);
@@ -475,19 +440,16 @@ export class CollageEngine {
     ctx.restore();
   }
 
-  // Overlay Canvas (Crop boxes, guidelines, handles, active selection)
   renderOverlays() {
     const oCtx = this.overlayCtx;
     oCtx.clearRect(0, 0, this.width, this.height);
 
     const activePhoto = this.getActivePhoto();
 
-    // 1. Highlight Active Photo Bounds
     if (activePhoto && activePhoto.slotBounds && !this.isCropModeActive) {
       const b = activePhoto.slotBounds;
       oCtx.save();
       if (this.layout === 'freeform') {
-        // Subtle glow / shadow
         oCtx.shadowColor = 'rgba(124, 58, 237, 0.35)';
         oCtx.shadowBlur = 8;
         oCtx.strokeStyle = '#7C3AED';
@@ -495,7 +457,6 @@ export class CollageEngine {
         oCtx.strokeRect(b.x, b.y, b.width, b.height);
         oCtx.shadowBlur = 0;
 
-        // Rotation stem and knob above top edge
         const topMidX = b.x + b.width / 2;
         const topMidY = b.y;
         const rotKnobY = b.y - 26;
@@ -507,7 +468,6 @@ export class CollageEngine {
         oCtx.lineTo(topMidX, rotKnobY);
         oCtx.stroke();
 
-        // Rotation knob circle
         oCtx.beginPath();
         oCtx.arc(topMidX, rotKnobY, 7, 0, Math.PI * 2);
         oCtx.fillStyle = '#FFFFFF';
@@ -516,19 +476,17 @@ export class CollageEngine {
         oCtx.lineWidth = 2.5;
         oCtx.stroke();
 
-        // Mini center dot in rotation knob
         oCtx.beginPath();
         oCtx.arc(topMidX, rotKnobY, 2.5, 0, Math.PI * 2);
         oCtx.fillStyle = '#7C3AED';
         oCtx.fill();
 
-        // 4 Corner Resize Handles (12x12 rounded squares)
         const cornerHw = 12;
         const cornerHandles = [
-          { x: b.x, y: b.y },                     // tl
-          { x: b.x + b.width, y: b.y },            // tr
-          { x: b.x, y: b.y + b.height },           // bl
-          { x: b.x + b.width, y: b.y + b.height }  // br
+          { x: b.x, y: b.y },
+          { x: b.x + b.width, y: b.y },
+          { x: b.x, y: b.y + b.height },
+          { x: b.x + b.width, y: b.y + b.height }
         ];
         oCtx.fillStyle = '#FFFFFF';
         oCtx.strokeStyle = '#7C3AED';
@@ -540,12 +498,11 @@ export class CollageEngine {
           oCtx.stroke();
         }
 
-        // 4 Edge Resize Handles (pills)
         const edgeHandles = [
-          { x: topMidX, y: b.y, w: 16, h: 8 },                    // tc
-          { x: topMidX, y: b.y + b.height, w: 16, h: 8 },         // bc
-          { x: b.x, y: b.y + b.height / 2, w: 8, h: 16 },         // ml
-          { x: b.x + b.width, y: b.y + b.height / 2, w: 8, h: 16 } // mr
+          { x: topMidX, y: b.y, w: 16, h: 8 },
+          { x: topMidX, y: b.y + b.height, w: 16, h: 8 },
+          { x: b.x, y: b.y + b.height / 2, w: 8, h: 16 },
+          { x: b.x + b.width, y: b.y + b.height / 2, w: 8, h: 16 }
         ];
         for (const eh of edgeHandles) {
           oCtx.beginPath();
@@ -554,7 +511,6 @@ export class CollageEngine {
           oCtx.stroke();
         }
 
-        // Top tag badge with real-time dimensions and rotation
         const rot = activePhoto.adjustments.rotation || 0;
         const rotText = rot !== 0 ? ` • 🔄 ${rot}°` : '';
         const rawTitle = (activePhoto.meta?.title || 'Photo').replace(/\.(jpe?g|png|webp|gif|svg)$/i, '');
@@ -579,30 +535,25 @@ export class CollageEngine {
       oCtx.restore();
     }
 
-    // 2. Interactive Crop Mode Guides
     if (this.isCropModeActive && activePhoto && activePhoto.slotBounds) {
       const b = this.activeCropRect || activePhoto.slotBounds;
       this.renderCropGuidelines(oCtx, b);
     }
 
-    // 3. Highlight Active Annotation Element & Interactive Handles
     if (this.activeAnnotationIndex >= 0 && this.activeAnnotationIndex < this.annotations.length) {
       const annot = this.annotations[this.activeAnnotationIndex];
       if (annot && annot.visible) {
         oCtx.save();
         if (annot.type === 'arrow') {
-          // Arrow start and end handles
           oCtx.strokeStyle = '#9333EA';
           oCtx.lineWidth = 2.5;
           oCtx.fillStyle = '#FFFFFF';
 
-          // Start handle
           oCtx.beginPath();
           oCtx.arc(annot.x, annot.y, 6, 0, Math.PI * 2);
           oCtx.fill();
           oCtx.stroke();
 
-          // End handle
           oCtx.beginPath();
           oCtx.arc(annot.endX, annot.endY, 7, 0, Math.PI * 2);
           oCtx.fillStyle = '#9333EA';
@@ -614,7 +565,6 @@ export class CollageEngine {
           const bw = annot.width;
           const bh = annot.height;
 
-          // Bounding dashed box
           oCtx.strokeStyle = '#9333EA';
           oCtx.lineWidth = 1.5;
           oCtx.setLineDash([5, 4]);
@@ -622,7 +572,6 @@ export class CollageEngine {
           oCtx.stroke();
           oCtx.setLineDash([]);
 
-          // 8 Resize Handles
           const handles = [
             { x: bx - 3, y: by - 3 },
             { x: bx + bw + 3, y: by - 3 },
@@ -648,7 +597,6 @@ export class CollageEngine {
             oCtx.stroke();
           }
 
-          // Dimension badge above element
           const tag = `${Math.round(bw)} × ${Math.round(bh)} px`;
           oCtx.font = 'bold 11px sans-serif';
           const tw = oCtx.measureText(tag).width;
@@ -664,7 +612,6 @@ export class CollageEngine {
       }
     }
 
-    // 4. Interactive Privacy Zones Overlay
     if (activePhoto && activePhoto.slotBounds && activePhoto.adjustments.privacyZones) {
       const slot = activePhoto.slotBounds;
       const zones = activePhoto.adjustments.privacyZones;
@@ -673,13 +620,11 @@ export class CollageEngine {
         const zone = zones[i];
         const isSelected = (i === this.activePrivacyZoneIndex);
 
-        // Compute screen coordinates
         const zx = zone.x <= 1 ? slot.x + zone.x * slot.width : slot.x + (zone.x / activePhoto.processedCanvas.width) * slot.width;
         const zy = zone.y <= 1 ? slot.y + zone.y * slot.height : slot.y + (zone.y / activePhoto.processedCanvas.height) * slot.height;
         const zw = zone.width <= 1 ? zone.width * slot.width : (zone.width / activePhoto.processedCanvas.width) * slot.width;
         const zh = zone.height <= 1 ? zone.height * slot.height : (zone.height / activePhoto.processedCanvas.height) * slot.height;
 
-        // Cache screen bounds for hit testing & dragging
         zone.screenBounds = { x: zx, y: zy, width: zw, height: zh };
 
         oCtx.save();
@@ -690,10 +635,8 @@ export class CollageEngine {
           oCtx.setLineDash([5, 4]);
         }
 
-        // Draw rectangle
         oCtx.strokeRect(zx, zy, zw, zh);
 
-        // Tag label at top-left
         oCtx.fillStyle = strokeColor;
         const label = zone.type === 'pixel' ? '▦ Pixelate' : '👁 Blur';
         oCtx.font = 'bold 10px sans-serif';
@@ -703,17 +646,16 @@ export class CollageEngine {
         oCtx.fillStyle = '#FFFFFF';
         oCtx.fillText(label, zx + 5, tagY + 13);
 
-        // Corner resize handles if selected
         if (isSelected) {
           oCtx.fillStyle = '#FFFFFF';
           oCtx.strokeStyle = strokeColor;
           oCtx.lineWidth = 2;
           const hw = 8;
           const handles = [
-            { x: zx, y: zy },                      // tl
-            { x: zx + zw, y: zy },                 // tr
-            { x: zx, y: zy + zh },                 // bl
-            { x: zx + zw, y: zy + zh }             // br
+            { x: zx, y: zy },
+            { x: zx + zw, y: zy },
+            { x: zx, y: zy + zh },
+            { x: zx + zw, y: zy + zh }
           ];
           for (const h of handles) {
             oCtx.fillRect(h.x - hw / 2, h.y - hw / 2, hw, hw);
@@ -724,7 +666,6 @@ export class CollageEngine {
       }
     }
 
-    // 4. Brush Cursor Circle Preview
     if (this.activeBrushMode !== 'none' && this.brushCursorPos) {
       oCtx.save();
       oCtx.strokeStyle = '#A580E8';
@@ -739,32 +680,27 @@ export class CollageEngine {
 
   renderCropGuidelines(ctx, b) {
     ctx.save();
-    // Dim outside crop box
     ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.beginPath();
     ctx.rect(0, 0, this.width, this.height);
     ctx.rect(b.x, b.y, b.width, b.height);
     ctx.fill('evenodd');
 
-    // Crop box outline
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
     ctx.strokeRect(b.x, b.y, b.width, b.height);
 
-    // Crop guides
     if (this.cropGuide === 'thirds') {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
 
-      // Vertical thirds
       ctx.beginPath();
       ctx.moveTo(b.x + b.width / 3, b.y);
       ctx.lineTo(b.x + b.width / 3, b.y + b.height);
       ctx.moveTo(b.x + (b.width * 2) / 3, b.y);
       ctx.lineTo(b.x + (b.width * 2) / 3, b.y + b.height);
 
-      // Horizontal thirds
       ctx.moveTo(b.x, b.y + b.height / 3);
       ctx.lineTo(b.x + b.width, b.y + b.height / 3);
       ctx.moveTo(b.x, b.y + (b.height * 2) / 3);
@@ -781,7 +717,6 @@ export class CollageEngine {
       ctx.stroke();
     }
 
-    // Corner anchor handles
     ctx.fillStyle = '#FFFFFF';
     const hw = 12;
     ctx.fillRect(b.x - 2, b.y - 2, hw, 4);

@@ -28,7 +28,7 @@
         </div>
       </div>
 
-      <!-- Quick Action Center -->
+      
       <div class="header-center-tools">
         <button id="btn-undo" class="tool-btn" title="Undo (Ctrl+Z)" disabled>
           <i data-lucide="undo-2"></i>
@@ -56,7 +56,7 @@
         </button>
       </div>
 
-      <!-- Right Header Actions -->
+      
       <div class="header-right-tools">
         <button id="btn-add-photos" class="btn-pastel btn-pastel-secondary">
           <i data-lucide="image-plus"></i>
@@ -127,7 +127,7 @@
 
       <!-- Center Viewport: Interactive Canvas Stage -->
       <main class="canvas-viewport-container" id="canvas-viewport">
-        <!-- Canvas Status / Notice Bar -->
+        
         <div id="viewport-banner" class="viewport-banner hidden">
           <div class="banner-content">
             <i data-lucide="shield-alert" class="banner-icon"></i>
@@ -138,12 +138,12 @@
 
         <div class="viewport-scroll-area" id="viewport-scroll-area">
           <div class="canvas-wrapper" id="canvas-wrapper">
-            <!-- Main Rendering Canvas -->
+            
             <canvas id="main-canvas" width="1200" height="900"></canvas>
-            <!-- Overlay Interactive Canvas (for crop guides, split view, handles, annotations, brushes) -->
+            
             <canvas id="overlay-canvas" width="1200" height="900"></canvas>
             
-            <!-- Before/After Split Line Handle -->
+            
             <div id="split-slider-line" class="split-slider-line hidden">
               <div class="split-slider-handle">
                 <i data-lucide="chevrons-left-right"></i>
@@ -154,7 +154,7 @@
           </div>
         </div>
 
-        <!-- Floating Viewport Controls -->
+        
         <div class="floating-viewport-controls" id="floating-viewport-controls">
           <div class="viewport-badge" id="canvas-dimension-badge">1200 × 900 px</div>
           <div class="viewport-badge" id="active-image-name-badge" title="No photo selected">No photo selected</div>
@@ -180,7 +180,7 @@
 
       <!-- Right Inspector Panel: Tab Contents -->
       <aside class="inspector-sidebar">
-        <!-- 1. Collage & Layouts Tab -->
+        
         <div class="inspector-tab-content active" id="tab-collage">
           <div class="panel-header">
             <h3>Collage & Layout</h3>
@@ -224,7 +224,7 @@
             </div>
           </div>
 
-          <!-- Freeform Transform Controls (Displayed when Freeform layout is active) -->
+          
           <div class="panel-section hidden" id="section-freeform-controls">
             <div class="section-badge-header">
               <label class="section-label">Freeform Photo Transform</label>
@@ -377,7 +377,7 @@
           </div>
         </div>
 
-        <!-- 2. Color & Light Adjustments Tab -->
+        
         <div class="inspector-tab-content" id="tab-light">
           <div class="panel-header">
             <h3>Color & Light</h3>
@@ -506,7 +506,7 @@
           </div>
         </div>
 
-        <!-- 3. Color Grading & Channels Tab -->
+        
         <div class="inspector-tab-content" id="tab-grading">
           <div class="panel-header">
             <h3>Color Grading</h3>
@@ -629,7 +629,7 @@
           </div>
         </div>
 
-        <!-- 4. Filters & Presets Tab -->
+        
         <div class="inspector-tab-content" id="tab-filters">
           <div class="panel-header">
             <h3>Filters & Presets</h3>
@@ -651,7 +651,7 @@
           </div>
         </div>
 
-        <!-- 5. Crop & Geometry Tab -->
+        
         <div class="inspector-tab-content" id="tab-crop">
           <div class="panel-header">
             <h3>Crop & Geometry</h3>
@@ -725,7 +725,7 @@
           </div>
         </div>
 
-        <!-- 6. Detail, Blur & Sharpening Tab -->
+        
         <div class="inspector-tab-content" id="tab-detail">
           <div class="panel-header">
             <h3>Sharpen, Blur & Detail</h3>
@@ -797,7 +797,7 @@
           </div>
         </div>
 
-        <!-- 7. Background & Cutout Tab -->
+        
         <div class="inspector-tab-content" id="tab-background">
           <div class="panel-header">
             <h3>Background & Cutout</h3>
@@ -878,7 +878,7 @@
           </div>
         </div>
 
-        <!-- 8. Text, Shapes & Annotations Tab -->
+        
         <div class="inspector-tab-content" id="tab-annotations">
           <div class="panel-header">
             <h3>Text, Shapes & Pins</h3>
@@ -1001,7 +1001,7 @@
           </div>
         </div>
 
-        <!-- 9. Retouch & Local Brushes Tab -->
+        
         <div class="inspector-tab-content" id="tab-retouch">
           <div class="panel-header">
             <h3>Retouch & Local Tools</h3>
@@ -1046,7 +1046,7 @@
           </div>
         </div>
 
-        <!-- 10. Layers Manager Tab -->
+        
         <div class="inspector-tab-content" id="tab-layers">
           <div class="panel-header">
             <h3>Layers Manager</h3>
@@ -1110,7 +1110,7 @@
 
   <!-- MODALS -->
 
-  <!-- 1. Wikimedia Commons Live Search & Sample Photos Modal -->
+  
   <div id="modal-commons-search" class="modal-overlay hidden">
     <div class="modal-card modal-card-large">
       <div class="modal-header">
@@ -1173,7 +1173,7 @@
     </div>
   </div>
 
-  <!-- 2. Professional Export Modal -->
+  
   <div id="modal-export" class="modal-overlay hidden">
     <div class="modal-card modal-card-large">
       <div class="modal-header">
@@ -1250,7 +1250,7 @@
     </div>
   </div>
 
-  <!-- 3. Project State Modal (Save/Load JSON) -->
+  
   <div id="modal-project" class="modal-overlay hidden">
     <div class="modal-card">
       <div class="modal-header">

@@ -1,4 +1,3 @@
-// Curated Wikimedia Commons sample images with verifiable attribution and licenses
 export const SAMPLE_COMMONS_IMAGES = [
   {
     id: 'sample-jwst',

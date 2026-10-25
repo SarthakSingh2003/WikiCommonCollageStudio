@@ -1,4 +1,3 @@
-// Commons Collage Studio — Main Application Controller
 import { createIcons, icons } from 'lucide';
 import { searchWikimediaCommons } from './wikimediaApi.js';
 import { DEFAULT_ADJUSTMENTS, FILTER_PRESETS } from './imageProcessing.js';
@@ -7,32 +6,34 @@ import { AnnotationItem } from './annotationEngine.js';
 import { ExportEngine } from './exportEngine.js';
 import { HistoryManager } from './historyManager.js';
 
-// Initialize Lucide Icons helper
 function refreshIcons() {
   createIcons({ icons });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Core Elements
   const mainCanvas = document.getElementById('main-canvas');
   const overlayCanvas = document.getElementById('overlay-canvas');
   const canvasWrapper = document.getElementById('canvas-wrapper');
   const canvasViewport = document.getElementById('canvas-viewport');
 
-  // Initialize Engines
   const engine = new CollageEngine(mainCanvas, overlayCanvas);
   const exportEngine = new ExportEngine(engine);
 
-  // Undo / Redo Manager
-  const history = new HistoryManager(engine, state => {
-    document.getElementById('btn-undo').disabled = !state.canUndo;
-    document.getElementById('btn-redo').disabled = !state.canRedo;
-  });
+  const history = new HistoryManager(
+    engine,
+    state => {
+      document.getElementById('btn-undo').disabled = !state.canUndo;
+      document.getElementById('btn-redo').disabled = !state.canRedo;
+    },
+    () => {
+      syncControlsToActivePhoto();
+      updateLayersList();
+      updateFilmstrip();
+    }
+  );
 
-  // Copied adjustments clipboard for Copy/Paste feature
   let copiedAdjustments = null;
 
-  // 2. Setup Zoom & Pan State
   let zoomLevel = 1.0;
   function updateZoom(newZoom) {
     zoomLevel = Math.max(0.25, Math.min(3.0, newZoom));
@@ -52,7 +53,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-zoom-out').addEventListener('click', () => updateZoom(zoomLevel - 0.15));
   document.getElementById('btn-zoom-fit').addEventListener('click', fitZoomToScreen);
 
-  // 3. Tab Switching
   const navTabs = document.querySelectorAll('.nav-tab');
   const inspectorTabs = document.querySelectorAll('.inspector-tab-content');
 
@@ -66,7 +66,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const content = document.getElementById(`tab-${targetTab}`);
       if (content) content.classList.add('active');
 
-      // Update interactive crop box mode if entering/leaving crop tab
       if (targetTab === 'crop') {
         engine.isCropModeActive = false; // user can toggle explicitly
         document.getElementById('btn-apply-crop').classList.add('hidden');
@@ -75,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('btn-apply-crop').classList.add('hidden');
       }
 
-      // Update brush mode if leaving retouch tab
       if (targetTab !== 'retouch') {
         engine.activeBrushMode = 'none';
         document.querySelectorAll('#brush-tool-pills .pill-btn').forEach(b => {
@@ -87,7 +85,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // 4. Color & Light Adjustments Bindings
   const lightSliders = [
     { id: 'slider-exposure', prop: 'exposure', displayId: 'val-exposure', format: v => `${(v / 50).toFixed(1)} EV` },
     { id: 'slider-brightness', prop: 'brightness', displayId: 'val-brightness', format: v => String(v) },
@@ -139,7 +136,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // 5. Color Grading & RGB Channels Bindings
   const gradingSliders = [
     { id: 'slider-shadows-hue', prop: 'shadowsHue', displayId: 'val-shadows-hue', format: v => `${v}°` },
     { id: 'slider-shadows-sat', prop: 'shadowsSat', displayId: 'val-shadows-sat', format: v => `${v}%` },
@@ -176,7 +172,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Toning style pills (B&W, Sepia, Cyanotype, Platinum, Warm Bronze)
   const tonePills = document.querySelectorAll('#toning-style-pills .pill-btn');
   tonePills.forEach(pill => {
     pill.addEventListener('click', () => {
@@ -207,7 +202,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // 6. Filters & Presets
   const filterCardsContainer = document.getElementById('filter-cards-container');
   const sliderFilterIntensity = document.getElementById('slider-filter-intensity');
   const valFilterIntensity = document.getElementById('val-filter-intensity');
@@ -235,7 +229,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.className = `filter-card ${preset.id === currentPreset ? 'active' : ''}`;
       card.setAttribute('data-filter', preset.id);
 
-      // Unique pastel gradient preview circle for each filter
       let bgStyle = '#DDD';
       if (preset.id === 'normal') bgStyle = 'linear-gradient(135deg, #A580E8, #70A9FF)';
       else if (preset.id === 'natural') bgStyle = 'linear-gradient(135deg, #70A9FF, #52B788)';
@@ -268,7 +261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!activePhoto) return;
 
     activePhoto.adjustments.filterPreset = preset.id;
-    // Apply preset adjustments non-destructively
     Object.keys(DEFAULT_ADJUSTMENTS).forEach(key => {
       if (['crop', 'rotation', 'straighten', 'flipH', 'flipV', 'privacyZones', 'cutoutEnabled'].includes(key)) return;
       activePhoto.adjustments[key] = DEFAULT_ADJUSTMENTS[key];
@@ -286,7 +278,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFilterToActivePhoto(FILTER_PRESETS[0]);
   });
 
-  // 7. Crop & Geometry Bindings
   const cropAspectPills = document.querySelectorAll('#crop-aspect-pills .pill-btn');
   let selectedCropRatio = 'free';
 
@@ -350,7 +341,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (activePhoto && engine.activeCropRect && activePhoto.slotBounds) {
       const slot = activePhoto.slotBounds;
       const cr = engine.activeCropRect;
-      // Normalize crop coordinates to 0..1
       const normCrop = {
         x: Math.max(0, (cr.x - slot.x) / slot.width),
         y: Math.max(0, (cr.y - slot.y) / slot.height),
@@ -387,7 +377,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // Crop guides selector
   document.querySelectorAll('#crop-guides-pills .pill-btn').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('#crop-guides-pills .pill-btn').forEach(p => p.classList.remove('active'));
@@ -397,7 +386,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Straighten & Rotation
   const sliderStraighten = document.getElementById('slider-straighten');
   sliderStraighten.addEventListener('input', e => {
     const val = parseFloat(e.target.value);
@@ -458,7 +446,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // 8. Sharpening, Blur & Detail
   const detailSliders = [
     { id: 'slider-sharpen', prop: 'sharpen', displayId: 'val-sharpen', format: v => String(v) },
     { id: 'slider-clarity', prop: 'clarity', displayId: 'val-clarity', format: v => String(v) },
@@ -498,7 +485,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // Privacy Zones (Faces, license plates, sensitive metadata)
   const privacyZonesList = document.getElementById('privacy-zones-list');
   const viewportBanner = document.getElementById('viewport-banner');
   document.getElementById('banner-close').addEventListener('click', () => viewportBanner.classList.add('hidden'));
@@ -598,13 +584,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 9. Background & Cutout Tools
   const chkCutoutEnable = document.getElementById('chk-cutout-enable');
   const chkCutoutInvert = document.getElementById('chk-cutout-invert');
   const cutoutColorInput = document.getElementById('cutout-color-input');
   const cutoutTargetSwatch = document.getElementById('cutout-target-swatch');
   const sliderCutoutTol = document.getElementById('slider-cutout-tolerance');
   const sliderCutoutFeather = document.getElementById('slider-cutout-feather');
+
+  const btnSampleCutout = document.getElementById('btn-sample-cutout-color');
+  if (btnSampleCutout) {
+    btnSampleCutout.addEventListener('click', async () => {
+      if (window.EyeDropper) {
+        try {
+          const eyeDropper = new EyeDropper();
+          const result = await eyeDropper.open();
+          if (result && result.sRGBHex) {
+            cutoutColorInput.value = result.sRGBHex;
+            cutoutTargetSwatch.style.background = result.sRGBHex;
+            const activePhoto = engine.getActivePhoto();
+            if (activePhoto) {
+              activePhoto.adjustments.cutoutColor = result.sRGBHex;
+              activePhoto.adjustments.cutoutEnabled = true;
+              chkCutoutEnable.checked = true;
+              activePhoto.needsProcessing = true;
+              engine.render();
+              history.recordChange();
+            }
+          }
+        } catch (_) {}
+      } else {
+        cutoutColorInput.click();
+      }
+    });
+  }
 
   chkCutoutEnable.addEventListener('change', e => {
     const activePhoto = engine.getActivePhoto();
@@ -670,7 +682,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // Drop Shadow
   const chkShadowEnable = document.getElementById('chk-shadow-enable');
   const sliderShadowBlur = document.getElementById('slider-shadow-blur');
   const sliderShadowOpacity = document.getElementById('slider-shadow-opacity');
@@ -704,7 +715,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 10. Collage & Canvas Layout Settings
   function syncFreeformInspector() {
     const activePhoto = engine.getActivePhoto();
     const ffSec = document.getElementById('section-freeform-controls');
@@ -739,7 +749,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Freeform Controls Listeners
   const inputFfX = document.getElementById('input-ff-x');
   const inputFfY = document.getElementById('input-ff-y');
   const inputFfW = document.getElementById('input-ff-w');
@@ -890,7 +899,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Spacing, Padding & Radius
   const sliderSpacing = document.getElementById('slider-spacing');
   sliderSpacing.addEventListener('input', e => {
     const val = parseInt(e.target.value, 10);
@@ -918,7 +926,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   sliderRadius.addEventListener('change', () => history.recordChange());
 
-  // Background color swatches
   document.querySelectorAll('#canvas-bg-swatches .color-swatch').forEach(swatch => {
     swatch.addEventListener('click', () => {
       document.querySelectorAll('#canvas-bg-swatches .color-swatch').forEach(s => s.classList.remove('active'));
@@ -946,7 +953,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // Canvas Aspect Ratio Pills
   const aspectPills = document.querySelectorAll('#canvas-aspect-pills .pill-btn');
   const customDimsRow = document.getElementById('custom-dims-row');
 
@@ -981,7 +987,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     fitZoomToScreen();
   });
 
-  // Batch Operations
   document.getElementById('btn-batch-apply-adjustments').addEventListener('click', () => {
     const activePhoto = engine.getActivePhoto();
     if (!activePhoto) return;
@@ -1005,7 +1010,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // Quick Action Buttons on floating bar
   document.getElementById('btn-quick-copy-adj').addEventListener('click', () => {
     const activePhoto = engine.getActivePhoto();
     if (!activePhoto) return;
@@ -1036,11 +1040,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // 11. Undo / Redo & Comparison View
   document.getElementById('btn-undo').addEventListener('click', () => history.undo());
   document.getElementById('btn-redo').addEventListener('click', () => history.redo());
 
-  // Hold to View Original
   const btnHoldOriginal = document.getElementById('btn-hold-original');
   const startHold = () => {
     engine.holdOriginalMode = true;
@@ -1056,7 +1058,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnHoldOriginal.addEventListener('touchstart', startHold);
   btnHoldOriginal.addEventListener('touchend', endHold);
 
-  // Split Before / After Slider
   const btnCompareSplit = document.getElementById('btn-compare-split');
   const splitSliderLine = document.getElementById('split-slider-line');
 
@@ -1078,7 +1079,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     splitSliderLine.style.height = `${slot.height}px`;
   }
 
-  // 12. Annotations & Text Engine Bindings
   let nextPinNumber = 1;
 
   function addAnnotation(type) {
@@ -1123,7 +1123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-add-circle').addEventListener('click', () => addAnnotation('circle'));
   document.getElementById('btn-add-callout').addEventListener('click', () => addAnnotation('callout'));
 
-  // Annotation Properties Controls
   const annotTextInput = document.getElementById('annot-text-input');
   const annotFontFamily = document.getElementById('annot-font-family');
   const annotFontSize = document.getElementById('annot-font-size');
@@ -1167,7 +1166,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const isShape = annot.type === 'rect' || annot.type === 'circle' || annot.type === 'arrow';
 
-    // Toggle text/font fields
     const textGroup = document.getElementById('annot-text-group');
     if (textGroup) textGroup.classList.toggle('hidden', isShape);
 
@@ -1341,7 +1339,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 13. Retouch & Local Brushes
   document.querySelectorAll('#brush-tool-pills .pill-btn').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('#brush-tool-pills .pill-btn').forEach(p => p.classList.remove('active'));
@@ -1384,7 +1381,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.recordChange();
   });
 
-  // 14. Interactive Canvas Mouse / Touch Handlers
   let isDragging = false;
   let dragTarget = null; // 'annotation' | 'annotation-resize' | 'split-handle' | 'crop-box' | 'brush' | 'photo-move' | 'photo-resize' | 'privacy-move' | 'privacy-resize'
   let dragOffset = { x: 0, y: 0 };
@@ -1431,7 +1427,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   overlayCanvas.addEventListener('mousedown', e => {
     const { x, y } = getCanvasCoords(e);
 
-    // 1. Check brush mode
     if (engine.activeBrushMode !== 'none') {
       const activePhoto = engine.getActivePhoto();
       if (activePhoto && activePhoto.slotBounds) {
@@ -1439,7 +1434,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (x >= slot.x && x <= slot.x + slot.width && y >= slot.y && y <= slot.y + slot.height) {
           isDragging = true;
           dragTarget = 'brush';
-          // Relative to processed canvas
           const relX = ((x - slot.x) / slot.width) * activePhoto.processedCanvas.width;
           const relY = ((y - slot.y) / slot.height) * activePhoto.processedCanvas.height;
           engine.currentBrushStroke = {
@@ -1456,7 +1450,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 2. Check Active Annotation Resize Handles First
     if (engine.activeAnnotationIndex >= 0 && engine.activeAnnotationIndex < engine.annotations.length) {
       const activeAnnot = engine.annotations[engine.activeAnnotationIndex];
       if (activeAnnot && activeAnnot.visible && !activeAnnot.locked) {
@@ -1482,7 +1475,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 2b. Check Annotation Hit (Body click to select & drag)
     for (let i = engine.annotations.length - 1; i >= 0; i--) {
       const annot = engine.annotations[i];
       if (annot.containsPoint(x, y)) {
@@ -1497,13 +1489,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 3. Check Privacy Zones Hit (Handles first, then interior)
     const activePhoto = engine.getActivePhoto();
     if (activePhoto && activePhoto.adjustments.privacyZones && activePhoto.slotBounds) {
       const slot = activePhoto.slotBounds;
       const zones = activePhoto.adjustments.privacyZones;
 
-      // Check resize handles on currently active zone
       if (engine.activePrivacyZoneIndex >= 0 && engine.activePrivacyZoneIndex < zones.length) {
         const zone = zones[engine.activePrivacyZoneIndex];
         const zx = zone.x <= 1 ? slot.x + zone.x * slot.width : zone.x;
@@ -1530,7 +1520,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Check interior of all privacy zones
       for (let i = zones.length - 1; i >= 0; i--) {
         const zone = zones[i];
         const zx = zone.x <= 1 ? slot.x + zone.x * slot.width : zone.x;
@@ -1550,7 +1539,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 4. In Freeform Mode: check active photo handles & rotation knob!
     if (engine.layout === 'freeform') {
       const activeP = engine.getActivePhoto();
       if (activeP && activeP.slotBounds && !activeP.locked) {
@@ -1558,7 +1546,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const topMidX = b.x + b.width / 2;
         const rotKnobY = b.y - 26;
 
-        // Check rotation handle knob
         if (Math.hypot(x - topMidX, y - rotKnobY) <= 16) {
           isDragging = true;
           dragTarget = 'photo-rotate';
@@ -1572,7 +1559,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        // 8 Resize Handles (generous hit tolerance hw = 18)
         const hw = 18;
         const handles = {
           'tl': { x: b.x, y: b.y },
@@ -1605,7 +1591,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 5. Check Crop Box Handle / Move
     if (engine.isCropModeActive && engine.activeCropRect) {
       const cr = engine.activeCropRect;
       if (x >= cr.x && x <= cr.x + cr.width && y >= cr.y && y <= cr.y + cr.height) {
@@ -1616,7 +1601,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // 6. Check Photo Selection & Drag Hit
     const slots = engine.calculateSlots();
     for (let i = engine.photos.length - 1; i >= 0; i--) {
       const photo = engine.photos[i];
@@ -1653,7 +1637,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Dynamic hover cursor for active annotation & handles
     if (engine.activeAnnotationIndex >= 0 && engine.activeAnnotationIndex < engine.annotations.length) {
       const activeAnnot = engine.annotations[engine.activeAnnotationIndex];
       if (activeAnnot && activeAnnot.visible && !activeAnnot.locked) {
@@ -1675,7 +1658,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Dynamic hover cursor for privacy zones
     const currentPhoto = engine.getActivePhoto();
     if (currentPhoto && currentPhoto.adjustments.privacyZones && currentPhoto.slotBounds) {
       const slot = currentPhoto.slotBounds;
@@ -1714,7 +1696,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Check Freeform active photo handles, rotation knob & bounds hover
     if (engine.layout === 'freeform') {
       const activeP = engine.getActivePhoto();
       if (activeP && activeP.slotBounds && !activeP.locked) {
@@ -1753,7 +1734,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Check if mouse is hovering over any photo in freeform
       const slots = engine.calculateSlots();
       for (let i = engine.photos.length - 1; i >= 0; i--) {
         const slot = slots[i];
@@ -1942,8 +1922,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (dragTarget === 'annotation' && engine.activeAnnotationIndex >= 0) {
       const annot = engine.annotations[engine.activeAnnotationIndex];
       if (annot && !annot.locked) {
-        annot.x = Math.round(x - dragOffset.x);
-        annot.y = Math.round(y - dragOffset.y);
+        const newX = Math.round(x - dragOffset.x);
+        const newY = Math.round(y - dragOffset.y);
+        const dx = newX - annot.x;
+        const dy = newY - annot.y;
+        annot.x = newX;
+        annot.y = newY;
+        if (annot.type === 'arrow') {
+          annot.endX += dx;
+          annot.endY += dy;
+        }
         engine.render();
       }
     } else if (dragTarget === 'annotation-resize' && engine.activeAnnotationIndex >= 0) {
@@ -2026,7 +2014,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Touch event support for canvas drag & resize
   overlayCanvas.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -2059,7 +2046,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Keyboard Nudge for Freeform Photos
   window.addEventListener('keydown', e => {
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
     if (engine.layout === 'freeform') {
@@ -2081,7 +2067,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Split Line Slider Mouse Dragging
   let isDraggingSplit = false;
   splitSliderLine.addEventListener('mousedown', e => {
     isDraggingSplit = true;
@@ -2104,7 +2089,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isDraggingSplit) isDraggingSplit = false;
   });
 
-  // 15. Layers Manager Tab
   const layersListContainer = document.getElementById('layers-list');
   const sliderLayerOpacity = document.getElementById('slider-layer-opacity');
 
@@ -2130,7 +2114,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateLayersList() {
     layersListContainer.innerHTML = '';
 
-    // Photos Layers
     engine.photos.forEach((photo, idx) => {
       const item = document.createElement('div');
       const isSelected = engine.activePhotoIndex === idx && engine.activeAnnotationIndex === -1;
@@ -2177,7 +2160,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       layersListContainer.appendChild(item);
     });
 
-    // Annotations Layers
     engine.annotations.forEach((annot, idx) => {
       const item = document.createElement('div');
       const isSelected = engine.activeAnnotationIndex === idx;
@@ -2216,7 +2198,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshIcons();
   }
 
-  // Layer Reordering Buttons
   document.getElementById('btn-layer-move-up').addEventListener('click', () => {
     if (engine.activeAnnotationIndex >= 0 && engine.activeAnnotationIndex < engine.annotations.length - 1) {
       const temp = engine.annotations[engine.activeAnnotationIndex];
@@ -2269,7 +2250,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 16. Filmstrip Management
   const filmstripContainer = document.getElementById('filmstrip-items');
   const photoCountBadge = document.getElementById('photo-count-badge');
 
@@ -2334,13 +2314,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateActiveImageBadge();
   }
 
-  // Synchronize controls with active photo's settings
   function syncControlsToActivePhoto() {
     const photo = engine.getActivePhoto();
     if (!photo) return;
     const adj = photo.adjustments;
 
-    // Light Sliders
     lightSliders.forEach(({ id, prop, displayId, format }) => {
       const slider = document.getElementById(id);
       const display = document.getElementById(displayId);
@@ -2350,7 +2328,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Grading Sliders
     gradingSliders.forEach(({ id, prop, displayId, format }) => {
       const slider = document.getElementById(id);
       const display = document.getElementById(displayId);
@@ -2360,7 +2337,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Detail Sliders
     detailSliders.forEach(({ id, prop, displayId, format }) => {
       const slider = document.getElementById(id);
       const display = document.getElementById(displayId);
@@ -2370,7 +2346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Cutout Controls
     chkCutoutEnable.checked = !!adj.cutoutEnabled;
     chkCutoutInvert.checked = !!adj.cutoutInvert;
     cutoutColorInput.value = adj.cutoutColor || '#FFFFFF';
@@ -2378,22 +2353,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     sliderCutoutTol.value = adj.cutoutTolerance || 35;
     document.getElementById('val-cutout-tolerance').textContent = String(sliderCutoutTol.value);
 
-    // Filter cards
     renderFilterCards();
 
-    // Privacy zones list
     renderPrivacyZonesList();
 
-    // Toning style pills
     document.querySelectorAll('#toning-style-pills .pill-btn').forEach(pill => {
       pill.classList.toggle('active', pill.getAttribute('data-tone') === (adj.toneStyle || 'none'));
     });
 
-    // Freeform Inspector
     syncFreeformInspector();
   }
 
-  // 17. Add Photo Sources (Local Upload & Sample Library)
   const localFileInput = document.getElementById('local-file-input');
   document.getElementById('btn-upload-file').addEventListener('click', () => localFileInput.click());
   document.getElementById('btn-add-photos').addEventListener('click', () => localFileInput.click());
@@ -2425,7 +2395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.target.value = '';
   });
 
-  // Load Remote / Wikimedia Image onto Canvas
   function loadRemoteImage(photoMeta) {
     return new Promise(resolve => {
       const img = new Image();
@@ -2453,7 +2422,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         resolve(photo);
       };
       img.onerror = () => {
-        // Fallback placeholder pattern if remote url unreachable
         const fallbackCanvas = document.createElement('canvas');
         fallbackCanvas.width = 800;
         fallbackCanvas.height = 600;
@@ -2485,7 +2453,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Clear all photos from canvas
   document.getElementById('btn-clear-all-photos')?.addEventListener('click', () => {
     if (engine.photos.length === 0) return;
     if (confirm('Are you sure you want to remove all photos from the collage canvas?')) {
@@ -2500,7 +2467,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Toggle floating controls minimization
   const floatingControls = document.getElementById('floating-viewport-controls');
   const btnToggleFloating = document.getElementById('btn-toggle-floating-controls');
   if (btnToggleFloating && floatingControls) {
@@ -2514,7 +2480,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 18. Wikimedia Commons Live Search Modal
   const modalCommons = document.getElementById('modal-commons-search');
   const commonsResultsGrid = document.getElementById('commons-results-grid');
   const commonsQueryInput = document.getElementById('commons-query-input');
@@ -2680,7 +2645,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Modal Closers
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', () => {
       const modalId = btn.getAttribute('data-close-modal');
@@ -2689,7 +2653,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // 19. Export Studio Modal
   const modalExport = document.getElementById('modal-export');
   const exportPreviewImg = document.getElementById('export-preview-img');
   const exportFileFeedback = document.getElementById('export-file-feedback');
@@ -2721,7 +2684,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     exportAttributionText.value = exportEngine.generateWikiTextManifest();
   }
 
-  // Export Format Pills
   document.querySelectorAll('#export-format-pills .pill-btn').forEach(pill => {
     pill.addEventListener('click', async () => {
       document.querySelectorAll('#export-format-pills .pill-btn').forEach(p => p.classList.remove('active'));
@@ -2731,7 +2693,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Export Scale Pills
   document.querySelectorAll('#export-scale-pills .pill-btn').forEach(pill => {
     pill.addEventListener('click', async () => {
       document.querySelectorAll('#export-scale-pills .pill-btn').forEach(p => p.classList.remove('active'));
@@ -2741,7 +2702,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Export Quality Slider
   const sliderExportQuality = document.getElementById('slider-export-quality');
   sliderExportQuality.addEventListener('input', async e => {
     const val = parseInt(e.target.value, 10);
@@ -2750,30 +2710,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateExportModalPreview();
   });
 
-  // Copy WikiText / Markdown
   document.getElementById('btn-copy-wikitext').addEventListener('click', () => {
-    navigator.clipboard.writeText(exportEngine.generateWikiTextManifest());
+    const text = exportEngine.generateWikiTextManifest();
+    exportAttributionText.value = text;
+    navigator.clipboard.writeText(text);
     alert('Wikimedia Commons WikiText markup copied to clipboard!');
   });
 
   document.getElementById('btn-copy-markdown').addEventListener('click', () => {
-    navigator.clipboard.writeText(exportEngine.generateMarkdownManifest());
+    const text = exportEngine.generateMarkdownManifest();
+    exportAttributionText.value = text;
+    navigator.clipboard.writeText(text);
     alert('Markdown attribution manifest copied to clipboard!');
   });
 
-  // Download Flattened Image
-  document.getElementById('btn-download-image').addEventListener('click', () => {
-    const dataUrl = exportEngine.getExportDataUrl(currentExportScale, currentExportFormat, currentExportQuality);
-    const a = document.createElement('a');
+  document.getElementById('btn-download-image').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-download-image');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Preparing...`;
+    if (window.lucide) window.lucide.createIcons();
+
     const ext = currentExportFormat === 'image/jpeg' ? 'jpg' : currentExportFormat === 'image/webp' ? 'webp' : 'png';
-    a.download = `commons-collage-${Date.now()}.${ext}`;
-    a.href = dataUrl;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const filename = `commons-collage-${Date.now()}.${ext}`;
+    const mimeType = currentExportFormat;
+
+    try {
+      if ('showSaveFilePicker' in window) {
+        let handle;
+        try {
+          handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: `${ext.toUpperCase()} Image`,
+              accept: { [mimeType]: [`.${ext}`] }
+            }]
+          });
+        } catch (pickerErr) {
+          if (pickerErr.name === 'AbortError') return;
+          throw pickerErr;
+        }
+
+        const blob = await exportEngine.getExportBlob(currentExportScale, currentExportFormat, currentExportQuality);
+        if (!blob) throw new Error('Could not generate image');
+
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        const blob = await exportEngine.getExportBlob(currentExportScale, currentExportFormat, currentExportQuality);
+        if (!blob) throw new Error('Could not generate image blob');
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.download = filename;
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+          if (a.parentNode) document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 60000);
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Download error:', err);
+        try {
+          const blob = await exportEngine.getExportBlob(currentExportScale, currentExportFormat, currentExportQuality);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.download = filename;
+          a.href = url;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentNode) document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 60000);
+        } catch (fallbackErr) {
+          alert('Failed to download image: ' + fallbackErr.message);
+        }
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      if (window.lucide) window.lucide.createIcons();
+    }
   });
 
-  // 20. Project State Save / Load
   const modalProject = document.getElementById('modal-project');
   document.getElementById('btn-project-state').addEventListener('click', () => {
     modalProject.classList.remove('hidden');
@@ -2808,7 +2835,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           engine.transparentBg = !!project.canvas.transparentBg;
         }
 
-        // Restore photos
         engine.photos = [];
         if (project.photos) {
           project.photos.forEach(pData => {
@@ -2819,6 +2845,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               photo.opacity = pData.opacity !== undefined ? pData.opacity : 1.0;
               photo.visible = pData.visible !== undefined ? pData.visible : true;
               photo.retouchStrokes = pData.retouchStrokes || [];
+              photo.freeformBounds = pData.freeformBounds ? { ...pData.freeformBounds } : null;
               engine.photos.push(photo);
               updateFilmstrip();
               updateLayersList();
@@ -2829,7 +2856,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
 
-        // Restore annotations
         engine.annotations = [];
         if (project.annotations) {
           project.annotations.forEach(aData => {
@@ -2848,7 +2874,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.target.value = '';
   });
 
-  // 21. Keyboard Shortcuts
   window.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
@@ -2878,17 +2903,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 22. Initial Load & Render
   refreshIcons();
   fitZoomToScreen();
-  // Start with clean blank workspace - do not auto-load sample images
   renderFilterCards();
   syncControlsToActivePhoto();
   updateLayersList();
   updateActiveImageBadge();
   engine.render();
 
-  // Dynamic Auto-fit for all screen sizes on window resize
   let resizeDebounceTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeDebounceTimer);

@@ -1,19 +1,12 @@
-// Commons Collage Studio — Professional Export & Wikimedia Attribution Manifest Engine
-
 export class ExportEngine {
   constructor(collageEngine) {
     this.engine = collageEngine;
     this.format = 'image/png';
     this.quality = 0.92;
-    this.scale = 1; // 1x, 2x, 3x
+    this.scale = 1;
   }
 
-  /**
-   * Render composition onto a high-resolution export canvas
-   * @param {number} scaleMultiplier - e.g. 1, 2, or 3
-   * @returns {HTMLCanvasElement}
-   */
-  renderExportCanvas(scaleMultiplier = 1) {
+  renderExportCanvas(scaleMultiplier = 1, format = this.format) {
     const origW = this.engine.width;
     const origH = this.engine.height;
     const exportW = origW * scaleMultiplier;
@@ -27,15 +20,13 @@ export class ExportEngine {
     ctx.save();
     ctx.scale(scaleMultiplier, scaleMultiplier);
 
-    // 1. Background
-    if (this.engine.transparentBg && (this.format === 'image/png' || this.format === 'image/webp')) {
+    if (this.engine.transparentBg && (format === 'image/png' || format === 'image/webp')) {
       ctx.clearRect(0, 0, origW, origH);
     } else {
-      ctx.fillStyle = this.engine.bgColor || '#F8F9FD';
+      ctx.fillStyle = this.engine.bgColor || '#FFFFFF';
       ctx.fillRect(0, 0, origW, origH);
     }
 
-    // 2. Render Photos into their layout slots
     const slots = this.engine.calculateSlots();
     for (let i = 0; i < this.engine.photos.length; i++) {
       const photo = this.engine.photos[i];
@@ -84,7 +75,6 @@ export class ExportEngine {
       ctx.restore();
     }
 
-    // 3. Render Annotations
     for (const annot of this.engine.annotations) {
       annot.render(ctx);
     }
@@ -93,19 +83,20 @@ export class ExportEngine {
     return exportCanvas;
   }
 
-  /**
-   * Generate Data URL for export
-   */
   getExportDataUrl(scale = 1, format = 'image/png', quality = 0.92) {
-    const canvas = this.renderExportCanvas(scale);
+    const canvas = this.renderExportCanvas(scale, format);
     return canvas.toDataURL(format, quality);
   }
 
-  /**
-   * Estimate output file size in bytes
-   */
+  async getExportBlob(scale = 1, format = 'image/png', quality = 0.92) {
+    const canvas = this.renderExportCanvas(scale, format);
+    return new Promise(resolve => {
+      canvas.toBlob(blob => resolve(blob), format, quality);
+    });
+  }
+
   async estimateFileSize(scale = 1, format = 'image/png', quality = 0.92) {
-    const canvas = this.renderExportCanvas(scale);
+    const canvas = this.renderExportCanvas(scale, format);
     return new Promise(resolve => {
       canvas.toBlob(
         blob => {
@@ -117,9 +108,6 @@ export class ExportEngine {
     });
   }
 
-  /**
-   * Generate standard Wikimedia Commons Information template markup
-   */
   generateWikiTextManifest() {
     const photos = this.engine.photos;
     if (photos.length === 0) {
@@ -148,9 +136,6 @@ ${photos.map(p => `* ${p.meta.sourceUrl || p.meta.title}`).join('\n')}
 `;
   }
 
-  /**
-   * Generate Markdown attribution manifest
-   */
   generateMarkdownManifest() {
     const photos = this.engine.photos;
     let md = `# Commons Collage Composition Attribution Manifest\n\n`;
@@ -174,9 +159,6 @@ ${photos.map(p => `* ${p.meta.sourceUrl || p.meta.title}`).join('\n')}
     return md;
   }
 
-  /**
-   * Serialize entire studio state to JSON for non-destructive project save
-   */
   exportProjectJson() {
     const project = {
       version: '1.0.0',
@@ -200,8 +182,8 @@ ${photos.map(p => `* ${p.meta.sourceUrl || p.meta.title}`).join('\n')}
         opacity: p.opacity,
         visible: p.visible,
         locked: p.locked,
+        freeformBounds: p.freeformBounds ? { ...p.freeformBounds } : null,
         retouchStrokes: p.retouchStrokes,
-        // Embed image data URL for full project portability
         imageSrc: p.img.src
       })),
       annotations: this.engine.annotations.map(a => ({

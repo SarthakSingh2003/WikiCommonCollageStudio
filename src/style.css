@@ -76,9 +76,6 @@ body {
   background: radial-gradient(circle at 10% 10%, #F5EEFD 0%, #F7F8FE 50%, #EEF6FC 100%);
 }
 
-/* =========================================
-   HEADER
-   ========================================= */
 .studio-header {
   height: 56px;
   display: flex;
@@ -136,7 +133,6 @@ body {
   border-radius: var(--radius-pill);
 }
 
-/* Header Center Toolbar */
 .header-center-tools {
   display: flex;
   align-items: center;
@@ -205,14 +201,12 @@ body {
   margin: 0 4px;
 }
 
-/* Header Right Buttons */
 .header-right-tools {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Pastel Buttons */
 .btn-pastel {
   border: none;
   cursor: pointer;
@@ -300,9 +294,6 @@ body {
   font-size: 14px;
 }
 
-/* =========================================
-   WORKSPACE BODY
-   ========================================= */
 .workspace-body {
   display: flex;
   flex: 1;
@@ -310,7 +301,6 @@ body {
   position: relative;
 }
 
-/* Left Navigation Sidebar */
 .tool-navigation-bar {
   width: 72px;
   background: rgba(255, 255, 255, 0.85);
@@ -367,9 +357,6 @@ body {
   box-shadow: 0 3px 10px rgba(165, 128, 232, 0.2);
 }
 
-/* =========================================
-   CENTER VIEWPORT (CANVAS STAGE)
-   ========================================= */
 .canvas-viewport-container {
   flex: 1;
   position: relative;
@@ -447,7 +434,6 @@ body {
   border-radius: 4px;
 }
 
-/* Split Slider Handle Overlay */
 .split-slider-line {
   position: absolute;
   top: 0;
@@ -498,7 +484,6 @@ body {
   left: 20px;
 }
 
-/* Floating Viewport Controls */
 .floating-viewport-controls {
   position: absolute;
   bottom: 14px;
@@ -604,9 +589,6 @@ body {
   border-color: var(--pastel-lavender-accent);
 }
 
-/* =========================================
-   RIGHT INSPECTOR SIDEBAR
-   ========================================= */
 .inspector-sidebar {
   width: 360px;
   min-width: 360px;
@@ -714,7 +696,6 @@ body {
   margin-bottom: 8px;
 }
 
-/* Control Group & Sliders */
 .control-group {
   margin-bottom: 10px;
 }
@@ -743,7 +724,6 @@ body {
   border-radius: 4px;
 }
 
-/* Custom Pastel Sliders */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -773,7 +753,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.2);
 }
 
-/* Specialized Slider Tracks */
 .temp-slider {
   background: linear-gradient(to right, #70A9FF, #F5F5F5, #FFA666) !important;
 }
@@ -798,7 +777,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: linear-gradient(to right, #333, #339AF0) !important;
 }
 
-/* Pill Groups & Toggles */
 .pill-group {
   display: flex;
   flex-wrap: wrap;
@@ -831,7 +809,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 2px 6px rgba(108, 78, 179, 0.3);
 }
 
-/* Layout Grid Selector */
 .layout-grid-selector {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -943,7 +920,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: #FFF;
 }
 
-/* Swatches */
 .bg-color-picker-row {
   display: flex;
   align-items: center;
@@ -986,7 +962,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: transparent;
 }
 
-/* Toggles & Checkboxes */
 .switch-wrap {
   display: inline-flex;
   align-items: center;
@@ -1030,7 +1005,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: translateX(14px);
 }
 
-/* Filter Card Grid */
 .filter-card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1077,7 +1051,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: var(--text-main);
 }
 
-/* Privacy Zones List */
 .privacy-zones-list {
   display: flex;
   flex-direction: column;
@@ -1104,7 +1077,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-weight: bold;
 }
 
-/* Cutout Color Swatch */
 .sampled-color-swatch {
   width: 24px;
   height: 24px;
@@ -1120,14 +1092,12 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-weight: 600;
 }
 
-/* Annotation Tool Buttons */
 .annotation-tool-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
 
-/* Layers List */
 .layers-list-container {
   display: flex;
   flex-direction: column;
@@ -1192,9 +1162,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   gap: 6px;
 }
 
-/* =========================================
-   BOTTOM FILMSTRIP
-   ========================================= */
 .studio-bottom-strip {
   height: 80px;
   background: rgba(255, 255, 255, 0.9);
@@ -1297,9 +1264,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   white-space: nowrap;
 }
 
-/* =========================================
-   MODALS
-   ========================================= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1379,7 +1343,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   flex: 1;
 }
 
-/* Commons Search Modal */
 .search-input-wrap {
   display: flex;
   gap: 8px;
@@ -1578,7 +1541,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.1);
 }
 
-/* Export Modal */
 .export-modal-body {
   display: flex;
   gap: 24px;
@@ -1651,7 +1613,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   margin-top: 10px;
 }
 
-/* Utilities */
 .hidden { display: none !important; }
 .flex-1 { flex: 1; }
 .w-80 { width: 80px; }
@@ -1714,7 +1675,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   to { opacity: 1; }
 }
 
-/* Privacy Zones Styling */
 .privacy-zones-list {
   display: flex;
   flex-direction: column;
@@ -1767,7 +1727,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   cursor: pointer;
 }
 
-/* Freeform Transform Panel */
 .freeform-grid-2x2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1833,15 +1792,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
   margin-bottom: 8px;
 }
 
-/* =========================================
-   DYNAMIC SCREEN RESPONSIVENESS & TOUCH
-   ========================================= */
 #main-canvas,
 #overlay-canvas {
   touch-action: none;
 }
 
-/* Tablets & Small Desktops (<= 1200px) */
 @media (max-width: 1200px) {
   .inspector-sidebar {
     width: 320px;
@@ -1850,7 +1805,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 }
 
-/* Medium Tablets & Laptops (<= 992px) */
 @media (max-width: 992px) {
   .studio-header {
     padding: 8px 12px;
@@ -1907,7 +1861,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 }
 
-/* Mobile & Small Tablets (<= 768px) */
 @media (max-width: 768px) {
   .studio-header {
     flex-wrap: wrap;

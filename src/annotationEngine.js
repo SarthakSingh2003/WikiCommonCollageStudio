@@ -1,9 +1,7 @@
-// Commons Collage Studio — Vector & Typography Annotation Engine
-
 export class AnnotationItem {
   constructor(options = {}) {
     this.id = options.id || `annot-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-    this.type = options.type || 'text'; // 'text' | 'title' | 'caption' | 'pin' | 'arrow' | 'rect' | 'circle' | 'callout'
+    this.type = options.type || 'text';
     this.x = options.x || 100;
     this.y = options.y || 100;
     this.width = options.width || 200;
@@ -13,7 +11,6 @@ export class AnnotationItem {
     this.locked = !!options.locked;
     this.visible = options.visible !== undefined ? options.visible : true;
 
-    // Content & Typography
     this.text = options.text || 'Annotation Text';
     this.fontFamily = options.fontFamily || "'Plus Jakarta Sans', sans-serif";
     this.fontSize = options.fontSize || 24;
@@ -21,17 +18,14 @@ export class AnnotationItem {
     this.textAlign = options.textAlign || 'center';
     this.color = options.color || '#2D3142';
 
-    // Shape styling
     this.fillColor = options.fillColor || '#FFFFFF';
     this.strokeColor = options.strokeColor || '#A580E8';
     this.strokeWidth = options.strokeWidth || 3;
     this.hasBg = options.hasBg !== undefined ? options.hasBg : true;
     this.cornerRadius = options.cornerRadius || 8;
 
-    // Pin marker number
     this.pinNumber = options.pinNumber || 1;
 
-    // Arrow coordinates
     this.endX = options.endX || this.x + 120;
     this.endY = options.endY || this.y + 80;
   }
@@ -42,7 +36,7 @@ export class AnnotationItem {
     ctx.save();
     ctx.globalAlpha = this.opacity;
     ctx.translate(this.x, this.y);
-    if (this.rotation !== 0) {
+    if (this.rotation !== 0 && this.type !== 'arrow') {
       ctx.rotate((this.rotation * Math.PI) / 180);
     }
 
@@ -84,7 +78,6 @@ export class AnnotationItem {
     const boxW = Math.max(this.width, textWidth + paddingX * 2);
     const boxH = Math.max(this.height, this.fontSize + paddingY * 2);
 
-    // Background pill/box if enabled
     if (this.hasBg) {
       ctx.fillStyle = this.fillColor;
       ctx.beginPath();
@@ -104,19 +97,16 @@ export class AnnotationItem {
 
   renderPin(ctx) {
     const radius = Math.max(16, this.fontSize * 0.9);
-    // Outer drop shadow circle
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fillStyle = this.strokeColor || '#A580E8';
     ctx.fill();
 
-    // Inner circle
     ctx.beginPath();
     ctx.arc(0, 0, radius - 3, 0, Math.PI * 2);
     ctx.fillStyle = this.fillColor || '#FFFFFF';
     ctx.fill();
 
-    // Number text
     ctx.fillStyle = this.color || '#2D3142';
     ctx.font = `800 ${radius * 1.1}px 'JetBrains Mono', sans-serif`;
     ctx.textAlign = 'center';
@@ -141,7 +131,6 @@ export class AnnotationItem {
     ctx.lineTo(length, 0);
     ctx.stroke();
 
-    // Arrowhead
     ctx.fillStyle = this.strokeColor || '#A580E8';
     ctx.beginPath();
     ctx.moveTo(length, 0);
@@ -195,7 +184,6 @@ export class AnnotationItem {
     const tailH = 14;
 
     ctx.beginPath();
-    // Bubble with speech tail at bottom center
     ctx.moveTo(-w / 2 + 10, -h / 2);
     ctx.lineTo(w / 2 - 10, -h / 2);
     ctx.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + 10);
@@ -227,11 +215,18 @@ export class AnnotationItem {
     ctx.fillText(this.text, 0, 0);
   }
 
-  // Hit test for mouse selection
   containsPoint(px, py) {
     if (!this.visible) return false;
-    const dx = px - this.x;
-    const dy = py - this.y;
+    let dx = px - this.x;
+    let dy = py - this.y;
+
+    if (this.rotation !== 0 && this.type !== 'arrow') {
+      const rad = (-this.rotation * Math.PI) / 180;
+      const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+      const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+      dx = rx;
+      dy = ry;
+    }
 
     if (this.type === 'pin') {
       const radius = Math.max(16, this.fontSize * 0.9);
@@ -239,7 +234,6 @@ export class AnnotationItem {
     }
 
     if (this.type === 'arrow') {
-      // Check distance to line segment
       const lineLen = Math.sqrt((this.endX - this.x) ** 2 + (this.endY - this.y) ** 2);
       if (lineLen === 0) return false;
       const t = Math.max(0, Math.min(1, ((px - this.x) * (this.endX - this.x) + (py - this.y) * (this.endY - this.y)) / (lineLen * lineLen)));
