@@ -36,17 +36,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let zoomLevel = 1.0;
   function updateZoom(newZoom) {
-    zoomLevel = Math.max(0.25, Math.min(3.0, newZoom));
+    zoomLevel = Math.max(0.05, Math.min(4.0, newZoom));
     canvasWrapper.style.transform = `scale(${zoomLevel})`;
     document.getElementById('zoom-level-text').textContent = `${Math.round(zoomLevel * 100)}%`;
   }
 
   function fitZoomToScreen() {
     const rect = canvasViewport.getBoundingClientRect();
-    const availableW = rect.width - 80;
-    const availableH = rect.height - 120;
+    if (!rect.width || !rect.height) return;
+    const isMobileW = window.innerWidth <= 768;
+    const isShortH = window.innerHeight <= 520;
+    const padW = isMobileW ? 24 : 50;
+    const padH = isShortH ? 24 : (isMobileW ? 36 : 70);
+    const availableW = Math.max(40, rect.width - padW);
+    const availableH = Math.max(40, rect.height - padH);
     const scale = Math.min(availableW / engine.width, availableH / engine.height, 1.0);
-    updateZoom(Math.max(0.3, scale));
+    updateZoom(Math.max(0.05, Math.min(1.0, scale)));
   }
 
   document.getElementById('btn-zoom-in').addEventListener('click', () => updateZoom(zoomLevel + 0.15));
@@ -55,6 +60,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const navTabs = document.querySelectorAll('.nav-tab');
   const inspectorTabs = document.querySelectorAll('.inspector-tab-content');
+  const inspectorSidebar = document.getElementById('inspector-sidebar');
+  const mobileInspectorTitle = document.getElementById('inspector-mobile-title');
+  const btnToggleInspector = document.getElementById('btn-toggle-inspector');
+  const inspectorMobileHeader = document.getElementById('inspector-mobile-header');
+
+  if (inspectorMobileHeader) {
+    inspectorMobileHeader.addEventListener('click', () => {
+      if (inspectorSidebar) {
+        inspectorSidebar.classList.toggle('minimized');
+        const isMin = inspectorSidebar.classList.contains('minimized');
+        const chevron = btnToggleInspector?.querySelector('i');
+        if (chevron) {
+          chevron.setAttribute('data-lucide', isMin ? 'chevron-up' : 'chevron-down');
+          refreshIcons();
+        }
+        setTimeout(fitZoomToScreen, 150);
+      }
+    });
+  }
+
+  const toolNavBar = document.querySelector('.tool-navigation-bar');
+  if (toolNavBar) {
+    toolNavBar.addEventListener('wheel', e => {
+      if (e.deltaY !== 0 && toolNavBar.scrollWidth > toolNavBar.clientWidth) {
+        e.preventDefault();
+        toolNavBar.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  }
 
   navTabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -63,8 +97,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       inspectorTabs.forEach(content => content.classList.remove('active'));
 
       tab.classList.add('active');
+      tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       const content = document.getElementById(`tab-${targetTab}`);
       if (content) content.classList.add('active');
+
+      if (mobileInspectorTitle) {
+        const tabSpan = tab.querySelector('span');
+        if (tabSpan) mobileInspectorTitle.textContent = tabSpan.textContent;
+      }
+
+      if (window.innerWidth <= 768 && inspectorSidebar && inspectorSidebar.classList.contains('minimized')) {
+        inspectorSidebar.classList.remove('minimized');
+        const chevron = btnToggleInspector?.querySelector('i');
+        if (chevron) {
+          chevron.setAttribute('data-lucide', 'chevron-down');
+          refreshIcons();
+        }
+        setTimeout(fitZoomToScreen, 150);
+      }
 
       if (targetTab === 'crop') {
         engine.isCropModeActive = false; // user can toggle explicitly
@@ -2912,10 +2962,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   engine.render();
 
   let resizeDebounceTimer = null;
-  window.addEventListener('resize', () => {
+  const onScreenResize = () => {
     clearTimeout(resizeDebounceTimer);
     resizeDebounceTimer = setTimeout(() => {
       fitZoomToScreen();
-    }, 120);
-  });
+    }, 100);
+  };
+  window.addEventListener('resize', onScreenResize);
+  window.addEventListener('orientationchange', onScreenResize);
 });

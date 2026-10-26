@@ -160,16 +160,16 @@
           <div class="viewport-badge" id="active-image-name-badge" title="No photo selected">No photo selected</div>
           <div class="viewport-quick-actions" id="viewport-quick-actions">
             <button id="btn-quick-copy-adj" class="quick-pill-btn" title="Copy Adjustment Settings">
-              <i data-lucide="copy"></i> Copy Edits
+              <i data-lucide="copy"></i> <span class="quick-btn-text">Copy Edits</span>
             </button>
             <button id="btn-quick-paste-adj" class="quick-pill-btn" title="Paste Adjustment Settings">
-              <i data-lucide="clipboard-paste"></i> Paste Edits
+              <i data-lucide="clipboard-paste"></i> <span class="quick-btn-text">Paste Edits</span>
             </button>
             <button id="btn-quick-apply-all" class="quick-pill-btn" title="Apply Current Adjustments to All Photos in Collage">
-              <i data-lucide="copy-check"></i> Apply to All
+              <i data-lucide="copy-check"></i> <span class="quick-btn-text">Apply to All</span>
             </button>
             <button id="btn-quick-reset" class="quick-pill-btn" title="Reset Current Photo Adjustments">
-              <i data-lucide="rotate-ccw"></i> Reset Photo
+              <i data-lucide="rotate-ccw"></i> <span class="quick-btn-text">Reset Photo</span>
             </button>
           </div>
           <button id="btn-toggle-floating-controls" class="btn-toggle-floating" title="Minimize / Expand controls bar">
@@ -179,7 +179,17 @@
       </main>
 
       <!-- Right Inspector Panel: Tab Contents -->
-      <aside class="inspector-sidebar">
+      <aside class="inspector-sidebar" id="inspector-sidebar">
+        <!-- Mobile Header Bar for Inspector Sheet -->
+        <div class="inspector-mobile-header" id="inspector-mobile-header">
+          <div class="inspector-mobile-title-wrap">
+            <span class="inspector-mobile-handle"></span>
+            <span class="inspector-mobile-title" id="inspector-mobile-title">Collage & Layout</span>
+          </div>
+          <button id="btn-toggle-inspector" class="btn-toggle-inspector" type="button" title="Minimize / Expand Inspector">
+            <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
+          </button>
+        </div>
         
         <div class="inspector-tab-content active" id="tab-collage">
           <div class="panel-header">
@@ -1089,7 +1099,7 @@
     <footer class="studio-bottom-strip">
       <div class="strip-left-label">
         <i data-lucide="images"></i>
-        <span>Collage Photos (<span id="photo-count-badge">0</span>)</span>
+        <span><span class="strip-label-text">Collage Photos </span>(<span id="photo-count-badge">0</span>)</span>
       </div>
 
       <div class="filmstrip-scroll" id="filmstrip-items">
@@ -1099,10 +1109,10 @@
       <div class="strip-right-actions">
         <input type="file" id="local-file-input" multiple accept="image/*" class="hidden" />
         <button id="btn-upload-file" class="btn-pastel btn-pastel-secondary btn-sm" title="Upload photos from your computer">
-          <i data-lucide="upload"></i> Upload Local
+          <i data-lucide="upload"></i> <span class="strip-btn-text">Upload Local</span>
         </button>
         <button id="btn-clear-all-photos" class="btn-pastel btn-pastel-blush btn-sm" title="Remove all photos from collage canvas">
-          <i data-lucide="trash-2"></i> Clear Canvas
+          <i data-lucide="trash-2"></i> <span class="strip-btn-text">Clear Canvas</span>
         </button>
       </div>
     </footer>
