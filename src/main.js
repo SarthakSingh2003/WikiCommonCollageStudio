@@ -58,6 +58,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-zoom-out').addEventListener('click', () => updateZoom(zoomLevel - 0.15));
   document.getElementById('btn-zoom-fit').addEventListener('click', fitZoomToScreen);
 
+  let resizeDebounce = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeDebounce);
+    resizeDebounce = setTimeout(() => {
+      fitZoomToScreen();
+    }, 100);
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(fitZoomToScreen, 250);
+  });
+
   const navTabs = document.querySelectorAll('.nav-tab');
   const inspectorTabs = document.querySelectorAll('.inspector-tab-content');
   const inspectorSidebar = document.getElementById('inspector-sidebar');
@@ -66,6 +77,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   const inspectorMobileHeader = document.getElementById('inspector-mobile-header');
 
   if (inspectorMobileHeader) {
+    let touchStartY = 0;
+    inspectorMobileHeader.addEventListener('touchstart', e => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    inspectorMobileHeader.addEventListener('touchend', e => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const diffY = touchEndY - touchStartY;
+      if (Math.abs(diffY) > 28) {
+        if (diffY > 0 && !inspectorSidebar.classList.contains('minimized')) {
+          // Swipe down: collapse inspector sheet
+          inspectorSidebar.classList.add('minimized');
+          const chevron = btnToggleInspector?.querySelector('i');
+          if (chevron) {
+            chevron.setAttribute('data-lucide', 'chevron-up');
+            refreshIcons();
+          }
+          setTimeout(fitZoomToScreen, 150);
+        } else if (diffY < 0 && inspectorSidebar.classList.contains('minimized')) {
+          // Swipe up: expand inspector sheet
+          inspectorSidebar.classList.remove('minimized');
+          const chevron = btnToggleInspector?.querySelector('i');
+          if (chevron) {
+            chevron.setAttribute('data-lucide', 'chevron-down');
+            refreshIcons();
+          }
+          setTimeout(fitZoomToScreen, 150);
+        }
+      }
+    }, { passive: true });
+
     inspectorMobileHeader.addEventListener('click', () => {
       if (inspectorSidebar) {
         inspectorSidebar.classList.toggle('minimized');
@@ -2064,8 +2106,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  let pinchStartDistance = null;
+  let pinchStartZoom = 1.0;
+
   overlayCanvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      pinchStartDistance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchStartZoom = zoomLevel;
+      e.preventDefault();
+      return;
+    }
     if (e.touches.length === 1) {
+      pinchStartDistance = null;
       const touch = e.touches[0];
       const simulatedEvent = new MouseEvent('mousedown', {
         clientX: touch.clientX,
@@ -2078,6 +2133,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, { passive: false });
 
   window.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && pinchStartDistance) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (pinchStartDistance > 10) {
+        const factor = currentDist / pinchStartDistance;
+        updateZoom(pinchStartZoom * factor);
+      }
+      e.preventDefault();
+      return;
+    }
     if (isDragging && e.touches.length === 1) {
       const touch = e.touches[0];
       const simulatedEvent = new MouseEvent('mousemove', {
@@ -2090,8 +2157,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }, { passive: false });
 
-  window.addEventListener('touchend', () => {
-    if (isDragging) {
+  window.addEventListener('touchend', e => {
+    if (e.touches.length < 2) {
+      pinchStartDistance = null;
+    }
+    if (isDragging && e.touches.length === 0) {
       window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     }
   });
