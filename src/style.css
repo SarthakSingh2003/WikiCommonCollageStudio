@@ -56,6 +56,15 @@
   padding: 0;
 }
 
+html {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-app);
@@ -63,20 +72,27 @@ body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  height: 100vh;
+  height: 100%;
   height: 100dvh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100%;
+  position: fixed;
+  inset: 0;
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
 }
 
 /* Base App Layout */
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   height: 100dvh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100%;
   background: radial-gradient(circle at 10% 10%, #F5EEFD 0%, #F7F8FE 50%, #EEF6FC 100%);
   overflow: hidden;
+  position: relative;
 }
 
 .studio-header {
